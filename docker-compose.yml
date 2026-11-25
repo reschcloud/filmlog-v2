@@ -2,6 +2,8 @@ services:
   filmlog:
     image: ghcr.io/reschcloud/filmlog:2
     build: .
+    # Server: vorhandenes Image ziehen statt lokal bauen; --build erzwingt einen lokalen Build.
+    pull_policy: missing
     container_name: filmlog
     restart: unless-stopped
     env_file: .env

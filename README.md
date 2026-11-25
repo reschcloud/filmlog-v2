@@ -11,9 +11,12 @@ Offline-Warteschlange, YAML-Import aus v1, JSON-Export und SQLite-Backup.
 ## Schnellstart
 
 ```bash
-cp .env.example .env        # Benutzername/Passwort eintragen
-docker compose up -d --build
+cp .env.example .env              # Benutzername/Passwort eintragen
+docker compose pull               # fertiges Image (amd64/arm64) von ghcr.io
+docker compose up -d
 ```
+
+Für eigene Änderungen am Code stattdessen `docker compose up -d --build` (baut lokal, auch auf einem Pi).
 
 Die App läuft dann auf `http://127.0.0.1:8001` und gehört hinter einen Reverse-Proxy mit TLS
 (GPS im Browser und der Service Worker brauchen HTTPS). Beispiel **Caddy**:
