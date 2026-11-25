@@ -98,6 +98,15 @@ body {
   line-height: 1;
 }
 .brand-mark-accent { color: var(--red); }
+.brand-version {
+  font-family: var(--font-mono);
+  font-size: 0.32em;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  vertical-align: super;
+  margin-left: 0.35em;
+}
 .brand-sub {
   display: none;
   font-size: var(--small);
