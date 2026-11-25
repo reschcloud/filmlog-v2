@@ -21,7 +21,7 @@ docker compose pull               # fertiges Image (amd64/arm64) von ghcr.io
 docker compose up -d
 ```
 
-Für eigene Änderungen am Code statt `pull` den Befehl `docker compose up -d --build` verwenden
+Für eigene Änderungen am Code den Befehl `docker compose up -d --build` verwenden
 (baut lokal, auch auf einem Pi; das kann einige Minuten dauern).
 
 Meldet der Server `docker: unknown command: docker compose`, fehlt das Compose-Plugin – siehe
@@ -49,10 +49,21 @@ Start automatisch migriert:
 cd filmlog-v2
 docker compose exec filmlog filmlog backup /data/backup-$(date +%F).sqlite   # Sicherheitskopie
 git pull
-docker compose pull
+docker compose pull --policy always   # "--policy always" ist nötig, siehe unten
 docker compose up -d
 docker compose ps                     # Status sollte "healthy" sein
 docker compose logs --tail 20         # Start und Migrationen prüfen
+```
+
+`docker compose pull` allein überspringt das Laden, wenn ein Image mit dem Tag `:2` schon lokal liegt
+(`pull_policy: missing` sorgt dafür, dass ein Neustart ohne Netz funktioniert). Es meldet dann
+„Image is already present locally“ und arbeitet mit dem alten Stand weiter. Deshalb beim Update immer
+`--policy always` – oder in einem Schritt: `docker compose up -d --pull always`.
+
+Welche Version läuft, verrät:
+
+```bash
+docker compose exec filmlog python -c "import filmlog; print(filmlog.__version__)"
 ```
 
 Wer lokal baut (eigene Änderungen), nimmt stattdessen:
