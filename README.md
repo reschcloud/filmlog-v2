@@ -24,6 +24,9 @@ docker compose up -d
 Für eigene Änderungen am Code statt `pull` den Befehl `docker compose up -d --build` verwenden
 (baut lokal, auch auf einem Pi; das kann einige Minuten dauern).
 
+Meldet der Server `docker: unknown command: docker compose`, fehlt das Compose-Plugin – siehe
+[Ohne Compose-Plugin](#ohne-compose-plugin-nur-docker).
+
 Die App läuft dann auf `http://127.0.0.1:8001` und gehört hinter einen Reverse-Proxy mit TLS
 (GPS im Browser und der Service Worker brauchen HTTPS). Beispiel **Caddy**:
 
@@ -72,6 +75,51 @@ Achtung: Migrationen laufen nur vorwärts. Wenn eine neuere Version das Schema s
 vor dem Update.
 
 Wer aus einem ausgecheckten Tag baut, sollte danach wieder auf `main` wechseln: `git checkout main`.
+
+## Ohne Compose-Plugin (nur `docker`)
+
+Fehlt `docker compose` (Meldung `docker: unknown command: docker compose`), gibt es zwei Wege.
+
+**A) Plugin nachinstallieren** (empfohlen, dann funktionieren alle Befehle oben):
+
+```bash
+# Docker aus dem offiziellen Docker-Repo (docker-ce):
+sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+
+# Docker aus den Ubuntu-Paketquellen:
+sudo apt install docker-compose-v2
+
+docker compose version        # erwartet: Docker Compose version v2.x
+```
+
+Bei einer Snap-Installation von Docker ist das Nachinstallieren umständlich; dort besser Docker nativ
+installieren oder Weg B nutzen.
+
+**B) Direkt mit `docker`** – dieselben Befehle von Hand, `.env` wird per `--env-file` gelesen (inklusive
+`PUID`/`PGID`):
+
+```bash
+docker pull ghcr.io/reschcloud/filmlog:2
+docker rm -f filmlog 2>/dev/null
+docker run -d --name filmlog --restart unless-stopped \
+  --env-file .env \
+  -p 127.0.0.1:8001:8001 \
+  -v "$PWD/data:/data" \
+  ghcr.io/reschcloud/filmlog:2
+```
+
+Statt der Compose-Befehle dann:
+
+| Compose | nur docker |
+|---|---|
+| `docker compose logs -f filmlog` | `docker logs -f filmlog` |
+| `docker compose ps` | `docker ps --filter name=filmlog` |
+| `docker compose exec filmlog filmlog …` | `docker exec -it filmlog filmlog …` |
+| `docker compose down` | `docker rm -f filmlog` |
+
+Aktualisieren ohne Compose: Backup, `docker pull ghcr.io/reschcloud/filmlog:2`, dann `docker rm -f filmlog`
+und denselben `docker run`-Befehl erneut. Die Ausfallzeit sind nur die Sekunden bis zum Start des neuen
+Containers; `./data` bleibt erhalten.
 
 ## Daten aus v1 übernehmen
 
