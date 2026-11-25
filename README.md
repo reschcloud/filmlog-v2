@@ -10,13 +10,19 @@ Offline-Warteschlange, YAML-Import aus v1, JSON-Export und SQLite-Backup.
 
 ## Schnellstart
 
+Voraussetzungen: Docker mit Compose-Plugin und `git`. Auf einem Raspberry Pi das 64-Bit-System verwenden
+(das Image gibt es für amd64 und arm64).
+
 ```bash
+git clone https://github.com/reschcloud/filmlog-v2.git
+cd filmlog-v2
 cp .env.example .env              # Benutzername/Passwort eintragen
 docker compose pull               # fertiges Image (amd64/arm64) von ghcr.io
 docker compose up -d
 ```
 
-Für eigene Änderungen am Code stattdessen `docker compose up -d --build` (baut lokal, auch auf einem Pi).
+Für eigene Änderungen am Code statt `pull` den Befehl `docker compose up -d --build` verwenden
+(baut lokal, auch auf einem Pi; das kann einige Minuten dauern).
 
 Die App läuft dann auf `http://127.0.0.1:8001` und gehört hinter einen Reverse-Proxy mit TLS
 (GPS im Browser und der Service Worker brauchen HTTPS). Beispiel **Caddy**:
@@ -30,6 +36,42 @@ filmlog.example.org {
 Nur im LAN ohne HTTPS: in `.env` `FILMLOG_SECURE_COOKIES=false` setzen, sonst funktioniert der Login nicht.
 
 Die Daten liegen in `./data/filmlog.db` (SQLite, WAL-Modus). Datenbank-Migrationen laufen beim Start automatisch.
+
+## Aktualisieren
+
+Neue Version holen (Repo und Image). Die Daten in `./data` bleiben unverändert, Schemaänderungen werden beim
+Start automatisch migriert:
+
+```bash
+cd filmlog-v2
+docker compose exec filmlog filmlog backup /data/backup-$(date +%F).sqlite   # Sicherheitskopie
+git pull
+docker compose pull
+docker compose up -d
+docker compose ps                     # Status sollte "healthy" sein
+docker compose logs --tail 20         # Start und Migrationen prüfen
+```
+
+Wer lokal baut (eigene Änderungen), nimmt stattdessen:
+
+```bash
+git pull && docker compose up -d --build
+```
+
+**Zurück auf eine ältere Version** (z. B. wenn ein Update Probleme macht):
+
+```bash
+git fetch --tags
+git checkout v2.0.0                   # gewünschter Tag
+docker compose up -d --build           # baut den Stand des Tags lokal
+```
+
+Achtung: Migrationen laufen nur vorwärts. Wenn eine neuere Version das Schema schon geändert hat, passt eine
+ältere Version eventuell nicht mehr dazu – dann die Sicherheitskopie von vor dem Update zurückholen
+(Container stoppen, `./data/filmlog.db*` durch die Kopie ersetzen, Container starten). Deshalb die Kopie
+vor dem Update.
+
+Wer aus einem ausgecheckten Tag baut, sollte danach wieder auf `main` wechseln: `git checkout main`.
 
 ## Daten aus v1 übernehmen
 
