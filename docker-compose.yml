@@ -1,0 +1,13 @@
+services:
+  filmlog:
+    image: ghcr.io/reschcloud/filmlog:2
+    build: .
+    container_name: filmlog
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      # Nur lokal erreichbar – der Reverse-Proxy (Caddy/Traefik/nginx) macht TLS und leitet weiter.
+      # Läuft der Proxy selbst in Docker, stattdessen ein gemeinsames Netzwerk nutzen und "ports" entfernen.
+      - "127.0.0.1:8001:8001"
+    volumes:
+      - ./data:/data

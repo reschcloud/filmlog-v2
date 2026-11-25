@@ -1,0 +1,6 @@
+# Einheitliche Zeilenenden, damit Shell-Skripte im Container laufen
+* text=auto
+*.py text eol=lf
+*.sh text eol=lf
+*.ts text eol=lf
+COPYING -text

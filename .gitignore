@@ -1,0 +1,25 @@
+# Daten und Geheimnisse
+data/
+.env
+client/filmlog-exif-writer.config.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+devdata/
+
+# Node / Frontend-Build
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Sonstiges
+.DS_Store
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
