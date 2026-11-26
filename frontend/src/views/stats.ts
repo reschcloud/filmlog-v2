@@ -137,6 +137,7 @@ export async function renderStats(ctx: ViewContext): Promise<void> {
     const hasMap = s.locations.some((l) => Number.isFinite(l.lat) && Number.isFinite(l.lon));
     content.innerHTML = `
       <p class="stats-gesamt"><span>${s.frames_total}</span> ${s.frames_total === 1 ? "Aufnahme" : "Aufnahmen"} · <span>${s.rolls_total}</span> ${s.rolls_total === 1 ? "Film" : "Filme"}</p>
+      ${hasMap ? `<p class="dashboard-label">Karte (${s.locations.length} Orte)</p><div id="statsMap" class="stats-map"></div>` : ""}
       ${ranking("Filmtyp", s.by_type)}
       ${ranking("Kamera", s.by_camera)}
       ${ranking("Filmstock", s.by_film_stock)}
@@ -144,8 +145,7 @@ export async function renderStats(ctx: ViewContext): Promise<void> {
       ${ranking("Objektiv", s.by_lens)}
       ${distribution("Belichtungszeit", s.by_shutter)}
       ${distribution("Blende", s.by_aperture)}
-      ${monthChart(s.by_month)}
-      ${hasMap ? `<p class="dashboard-label">Karte (${s.locations.length} Orte)</p><div id="statsMap" class="stats-map"></div>` : ""}`;
+      ${monthChart(s.by_month)}`;
     const month = content.querySelector<HTMLElement>(".month-scroll");
     if (month) month.scrollLeft = month.scrollWidth;
     const mapEl = content.querySelector<HTMLElement>("#statsMap");
