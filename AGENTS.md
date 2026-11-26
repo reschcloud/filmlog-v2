@@ -33,7 +33,7 @@ npm run dev          # Dev-Server, Proxy auf localhost:8000
 ```
 
 Node ist auf diesem Rechner oft nicht installiert; dann per Docker bauen:
-`docker run --rm -u $(id -u):$(id -g) -e HOME=/tmp -v "$PWD":/app -w /app node:22-alpine sh -c "npm install && npm run build"`.
+`docker run --rm -u $(id -u):$(id -g) -e HOME=/tmp -v "$PWD":/app -w /app node:26-alpine sh -c "npm install && npm run build"`.
 Python-Abhängigkeiten ggf. ebenso in einem `python:3.12-slim`-Container (venv außerhalb des Repos).
 
 ## Tests

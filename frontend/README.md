@@ -9,11 +9,11 @@ Node ist lokal nicht nötig, alles läuft über Docker:
 
 ```sh
 # Abhängigkeiten installieren + bauen (Ausgabe: dist/)
-docker run --rm -u $(id -u):$(id -g) -e HOME=/tmp -v "$PWD":/app -w /app node:22-alpine \
+docker run --rm -u $(id -u):$(id -g) -e HOME=/tmp -v "$PWD":/app -w /app node:26-alpine \
   sh -c "npm install && npm run build"
 
 # Dev-Server (Port 5173, Proxy für /api, /auth, /healthz, /client -> localhost:8000)
-docker run --rm -it --network host -u $(id -u):$(id -g) -e HOME=/tmp -v "$PWD":/app -w /app node:22-alpine \
+docker run --rm -it --network host -u $(id -u):$(id -g) -e HOME=/tmp -v "$PWD":/app -w /app node:26-alpine \
   sh -c "npm install && npm run dev -- --host"
 ```
 
