@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---------- Frontend bauen (läuft immer auf der Build-Plattform, Ergebnis ist plattformunabhängig) ----------
-FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend
+FROM --platform=$BUILDPLATFORM node:26-alpine AS frontend
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
