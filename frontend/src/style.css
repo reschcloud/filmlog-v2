@@ -705,11 +705,6 @@ button, .anzahl-btn, .add-btn {
   touch-action: manipulation;
 }
 
-/* Doppel-Tipp-Zoom auf iOS/Android unterbinden (Pinch bleibt erlaubt, damit die Karte zoombar bleibt). */
-body {
-  touch-action: manipulation;
-}
-
 .blitz-toggle {
   display: flex;
   align-items: center;

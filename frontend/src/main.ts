@@ -41,17 +41,6 @@ const app = document.getElementById("app") as HTMLElement;
 const queueBadge = document.getElementById("queueBadge") as HTMLButtonElement;
 const netBadge = document.getElementById("netBadge") as HTMLElement;
 
-// iOS ignoriert user-scalable=no: Pinch-Zoom per gesturestart unterbinden – außer auf der Karte,
-// die braucht ihn zum Zoomen. (Doppel-Tipp-Zoom kommt über `touch-action: manipulation` im CSS weg.)
-document.addEventListener(
-  "gesturestart",
-  (e) => {
-    const target = e.target as HTMLElement | null;
-    if (!target?.closest?.(".leaflet-container")) e.preventDefault();
-  },
-  { passive: false },
-);
-
 let renderToken = 0;
 let loginShown = false;
 let loggedIn = false;
