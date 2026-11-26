@@ -142,13 +142,23 @@ export async function renderStats(ctx: ViewContext): Promise<void> {
       ${ranking("Filmtyp", s.by_type)}
       ${ranking("Kamera", s.by_camera)}
       ${ranking("Filmstock", s.by_film_stock)}
-      ${ranking("Objektiv", s.by_lens)}
-      ${distribution("Belichtungszeit", s.by_shutter)}
-      ${distribution("Blende", s.by_aperture)}
-      ${monthChart(s.by_month)}
+      <details class="stats-more">
+        <summary>Weitere Auswertungen</summary>
+        ${ranking("Objektiv", s.by_lens)}
+        ${distribution("Belichtungszeit", s.by_shutter)}
+        ${distribution("Blende", s.by_aperture)}
+        ${monthChart(s.by_month)}
+      </details>
       ${hasMap ? `<p class="dashboard-label">Karte (${s.locations.length} Orte)</p><div id="statsMap" class="stats-map"></div>` : ""}`;
-    const month = content.querySelector<HTMLElement>(".month-scroll");
-    if (month) month.scrollLeft = month.scrollWidth;
+    const more = content.querySelector<HTMLDetailsElement>(".stats-more");
+    const scrollMonths = () => {
+      const month = more?.querySelector<HTMLElement>(".month-scroll");
+      if (month) month.scrollLeft = month.scrollWidth;
+    };
+    more?.addEventListener("toggle", () => {
+      if (more.open) scrollMonths();
+    });
+    if (more?.open) scrollMonths();
     const mapEl = content.querySelector<HTMLElement>("#statsMap");
     if (mapEl) {
       drawMap(mapEl, s.locations, ctx.alive).catch(() => {

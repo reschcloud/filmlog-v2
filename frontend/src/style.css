@@ -890,6 +890,36 @@ button, .anzahl-btn, .add-btn {
 .stats-tab.aktiv { background: var(--amber); border-color: var(--amber); color: var(--ink); }
 .stats-tab.aktiv:hover { color: var(--ink); }
 
+.stats-more {
+  margin: 18px 0 0;
+  border: 1px solid rgba(242,234,217,0.25);
+  border-radius: 3px;
+  padding: 0 14px 6px;
+}
+.stats-more summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 0;
+  font-family: var(--font-mono);
+  font-size: var(--medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+.stats-more summary::-webkit-details-marker { display: none; }
+.stats-more summary::before { content: "▸ "; color: var(--amber); }
+.stats-more[open] summary::before { content: "▾ "; }
+.stats-more[open] summary { padding-bottom: 2px; }
+.search-note {
+  margin: 10px 0 0;
+  font-family: var(--font-serif);
+  font-size: var(--small);
+  color: var(--muted);
+}
+
 .stats-gesamt {
   margin: 0 0 4px;
   font-family: var(--font-display);

@@ -45,7 +45,7 @@ export function renderSearch(ctx: ViewContext): void {
           ${typeCornerHtml(f.roll.type)}
           <div class="eintrag-info">
             <div class="eintrag-motiv">${f.motif ? escapeHtml(f.motif) : "(kein Motiv)"}</div>
-            <div class="eintrag-film">${escapeHtml(f.roll.camera_name)} · ${escapeHtml(f.roll.film_stock_name)} #${f.roll_number} · Nr. ${f.position}</div>
+            <div class="eintrag-film">${escapeHtml(f.roll.camera_name)} · #${f.roll_number} · ${escapeHtml(f.roll.film_stock_name)} · Nr. ${f.position}</div>
             <div class="eintrag-meta">${frameMetaHtml(f)}</div>
           </div>
         </a>`,
@@ -66,9 +66,11 @@ export function renderSearch(ctx: ViewContext): void {
         .join("");
       const frameCount = res.frames.length >= 50 ? "50+" : String(res.frames.length);
       const rollCount = res.rolls.length >= 30 ? "30+" : String(res.rolls.length);
+      const capped = res.frames.length >= 50 || res.rolls.length >= 30;
       out.innerHTML =
         (frames ? `<p class="dashboard-label">Aufnahmen (${frameCount})</p><div class="eintraege-liste eintraege-liste-abstand">${frames}</div>` : "") +
-        (rolls ? `<p class="dashboard-label">Filme (${rollCount})</p><div class="eintraege-liste eintraege-liste-abstand">${rolls}</div>` : "");
+        (rolls ? `<p class="dashboard-label">Filme (${rollCount})</p><div class="eintraege-liste eintraege-liste-abstand">${rolls}</div>` : "") +
+        (capped ? `<p class="search-note">Es werden nur die ersten Treffer angezeigt. Suche verfeinern, um ältere Aufnahmen zu finden.</p>` : "");
     } catch (e) {
       if (my === seq && ctx.alive()) out.innerHTML = `<p class="error-msg">${escapeHtml(errMsg(e))}</p>`;
     }

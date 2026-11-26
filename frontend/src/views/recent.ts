@@ -43,7 +43,7 @@ export async function renderRecent(ctx: ViewContext): Promise<void> {
         ${typeCornerHtml(f.roll.type)}
         <div class="eintrag-info">
           <div class="eintrag-motiv">${f.motif ? escapeHtml(f.motif) : "(kein Motiv)"}</div>
-          <div class="eintrag-film">${escapeHtml(f.roll.camera_name)} · ${escapeHtml(f.roll.film_stock_name)} #${f.roll_number} · Nr. ${f.position}</div>
+          <div class="eintrag-film">${escapeHtml(f.roll.camera_name)} · #${f.roll_number} · ${escapeHtml(f.roll.film_stock_name)} · Nr. ${f.position}</div>
           <div class="eintrag-meta">${frameMetaHtml(f)}</div>
         </div>
         <div class="eintrag-aktionen">
