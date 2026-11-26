@@ -1332,7 +1332,16 @@ a.tile { min-height: 44px; }
 .month-bar { display: block; width: 100%; background: var(--amber); border-radius: 2px 2px 0 0; max-height: 100px; }
 .month-val { font-family: var(--font-display); font-weight: 700; font-size: var(--small); color: var(--red); }
 .month-label { font-family: var(--font-mono); font-size: var(--small); color: var(--ink-soft); white-space: nowrap; }
-.stats-map { height: 320px; border-radius: 3px; overflow: hidden; background: var(--paper-dim); }
+/* Staendig etwa 4:5 (Hochformat), auf breiten Screens schmal und mittig statt flacher Streifen. */
+.stats-map {
+  aspect-ratio: 4 / 5;
+  height: auto;
+  max-width: 420px;
+  margin-inline: auto;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--paper-dim);
+}
 .stats-map .empty-state { color: var(--ink-soft); padding: 16px; }
 
 /* Optionen / Katalog */

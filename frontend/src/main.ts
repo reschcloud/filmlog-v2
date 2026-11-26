@@ -32,6 +32,11 @@ const routes: Record<string, ViewFn> = {
   einstellungen: renderSettings,
 };
 
+// Versionskennung (aus package.json, beim Build injiziert) ins Logo und den Tab-Titel.
+const brandVersion = document.querySelector(".brand-version");
+if (brandVersion) brandVersion.textContent = `v${__APP_VERSION__}`;
+document.title = `Filmlog v${__APP_VERSION__}`;
+
 const app = document.getElementById("app") as HTMLElement;
 const queueBadge = document.getElementById("queueBadge") as HTMLButtonElement;
 const netBadge = document.getElementById("netBadge") as HTMLElement;

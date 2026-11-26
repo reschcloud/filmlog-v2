@@ -1,9 +1,15 @@
+import pkg from "./package.json";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 const backend = "http://localhost:8000";
+// Versionskennung aus package.json ins Bundle injizieren (Anzeige im Logo/Titel).
+const version = pkg.version;
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+  },
   server: {
     proxy: {
       "/api": backend,
