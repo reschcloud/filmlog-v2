@@ -252,12 +252,16 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   }, 250);
   motif.addEventListener("input", loadMotifs);
   motif.addEventListener("blur", () => window.setTimeout(() => (motifSuggest.hidden = true), 150));
-  motifSuggest.addEventListener("pointerdown", (ev) => {
+  // Auswahl bei "click" statt "pointerdown": Die Liste bleibt bis zum Klick sichtbar, dadurch landet
+  // der Klick auf dem Button und nicht (Ghost-Klick) auf dem dahinterliegenden Formularfeld. preventDefault
+  // unterbindet zudem, dass das umgebende <label> das Textarea fokussiert (iOS-Tastatur geht sonst auf).
+  motifSuggest.addEventListener("click", (ev) => {
     const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>(".suggest-item");
     if (!btn) return;
     ev.preventDefault();
     motif.value = btn.dataset.m ?? "";
     motifSuggest.hidden = true;
+    motif.focus();
   });
 
   // ---- Ort / GPS ----

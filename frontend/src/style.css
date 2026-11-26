@@ -233,7 +233,8 @@ body {
 
 .card input, .card select, .card textarea {
   /* font-family: var(--font-mono); */
-  font-size: var(--medium);
+  /* 16px statt 15px: iOS Safari zoomt sonst beim Fokus in das Feld (Auto-Zoom bei Schrift < 16px). */
+  font-size: 16px;
   color: var(--ink);
   background: #fffdf8;
   border: 1px solid var(--paper-dim);
@@ -684,6 +685,11 @@ body {
 }
 
 button, .anzahl-btn, .add-btn {
+  touch-action: manipulation;
+}
+
+/* Doppel-Tipp-Zoom auf iOS/Android unterbinden (Pinch bleibt erlaubt, damit die Karte zoombar bleibt). */
+body {
   touch-action: manipulation;
 }
 
