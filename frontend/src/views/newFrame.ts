@@ -101,15 +101,15 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         </label>
       </div>
 
-      <label>Anzahl <span class="field-optional">(mehrfach speichern)</span>
+      <label>Anzahl Aufnahmen
         <div class="anzahl-stepper">
           <button type="button" class="anzahl-btn" id="countMinus" aria-label="Weniger">−</button>
-          <input type="number" name="count" id="countInput" min="1" max="50" step="1" value="1" readonly>
+          <input type="number" name="count" id="countInput" min="1" max="50" step="1" value="1">
           <button type="button" class="anzahl-btn" id="countPlus" aria-label="Mehr">+</button>
         </div>
       </label>
 
-      <button type="submit" class="btn-primary">Aufnahme speichern</button>
+      <button type="submit" class="btn-primary" id="saveBtn">Aufnahme speichern</button>
     </form>`;
 
   const form = qs<HTMLFormElement>(el, "#frameForm");
@@ -154,8 +154,19 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   document.addEventListener("visibilitychange", onVisible);
 
   // ---- Anzahl ----
-  qs(el, "#countMinus").onclick = () => (countInput.value = String(Math.max(1, (parseInt(countInput.value, 10) || 1) - 1)));
-  qs(el, "#countPlus").onclick = () => (countInput.value = String(Math.min(50, (parseInt(countInput.value, 10) || 1) + 1)));
+  const saveBtn = qs<HTMLButtonElement>(el, "#saveBtn");
+  const updateSaveLabel = () => {
+    const n = Math.min(50, Math.max(1, parseInt(countInput.value, 10) || 1));
+    saveBtn.textContent = n === 1 ? "Aufnahme speichern" : `${n} Aufnahmen speichern`;
+  };
+  const stepCount = (delta: number) => {
+    countInput.value = String(Math.min(50, Math.max(1, (parseInt(countInput.value, 10) || 1) + delta)));
+    updateSaveLabel();
+  };
+  qs(el, "#countMinus").onclick = () => stepCount(-1);
+  qs(el, "#countPlus").onclick = () => stepCount(1);
+  countInput.addEventListener("input", updateSaveLabel);
+  updateSaveLabel();
 
   // ---- Auswahllisten ----
   const lensesActive = catalog.lenses.filter((l) => !l.archived);

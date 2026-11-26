@@ -89,7 +89,9 @@ function enterApp(): void {
 async function updateBadge(): Promise<void> {
   const n = await queueCount();
   queueBadge.hidden = n === 0;
-  queueBadge.textContent = `${n} offline gespeichert`;
+  queueBadge.textContent = String(n);
+  queueBadge.title = `${n} offline gespeichert`;
+  queueBadge.setAttribute("aria-label", `${n} offline gespeichert`);
 }
 
 async function syncQueue(announce: boolean): Promise<void> {
@@ -112,6 +114,11 @@ function updateNet(): void {
 setRerender(renderRoute);
 setUnauthorizedHandler(showLogin);
 window.addEventListener("hashchange", renderRoute);
+
+// Auf der Startseite ändert der Logo-Klick den Hash nicht – dann nach oben scrollen.
+document.querySelector<HTMLAnchorElement>(".brand")?.addEventListener("click", () => {
+  if (location.hash === "#start") window.scrollTo({ top: 0, behavior: "smooth" });
+});
 
 window.addEventListener(EVT_QUEUE, () => void updateBadge());
 window.addEventListener(EVT_SYNCED, (ev) => {

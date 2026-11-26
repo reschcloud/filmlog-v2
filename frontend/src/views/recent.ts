@@ -13,7 +13,7 @@ export async function renderRecent(ctx: ViewContext): Promise<void> {
   const { el } = ctx;
   el.innerHTML = `
     <h1 class="view-title">Zuletzt eingetragene Aufnahmen</h1>
-    <div class="card">
+    <div class="card filter-sticky">
       <label>Film
         <select id="rollFilter"><option value="">Alle</option></select>
       </label>
@@ -26,12 +26,12 @@ export async function renderRecent(ctx: ViewContext): Promise<void> {
   let cursor: string | null = null;
 
   api
-    .get<Roll[]>("/api/v2/rolls?status=offen,abgeschlossen&sort=recent")
+    .get<Roll[]>("/api/v2/rolls?sort=recent")
     .then((rolls) => {
       if (!ctx.alive()) return;
-      const opts = rolls.map((r) => ({ value: r.number, label: `${r.camera.name} · ${r.film_stock.name} #${r.number}` }));
+      const opts = rolls.map((r) => ({ value: r.number, label: `#${r.number} · ${r.camera.name} · ${r.film_stock.name}` }));
       if (filterRoll && !opts.some((o) => String(o.value) === filterRoll)) {
-        opts.push({ value: Number(filterRoll), label: `Film #${filterRoll}` });
+        opts.push({ value: Number(filterRoll), label: `#${filterRoll}` });
       }
       select.innerHTML = optionsHtml(opts, filterRoll, "Alle");
     })

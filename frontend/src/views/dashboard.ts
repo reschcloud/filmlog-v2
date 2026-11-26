@@ -22,15 +22,15 @@ function rollCardHtml(r: Roll, queued: number): string {
   return `
     <div class="dashboard-card" data-roll="${r.number}" tabindex="0" role="button">
       ${typeCornerHtml(r.film_stock.type)}
-      ${full ? `<button type="button" class="dashboard-done-btn" data-done="${r.number}" title="Film abschließen" aria-label="Film #${r.number} abschließen">✓</button>` : ""}
       <div class="dashboard-info">
         <div class="dashboard-kamera">${escapeHtml(r.camera.name)}</div>
-        <div class="dashboard-film">${escapeHtml(r.film_stock.name)} #${r.number} ${expiryPillHtml(r.expired_years)}</div>
+        <div class="dashboard-film">#${r.number} · ${escapeHtml(r.film_stock.name)} ${expiryPillHtml(r.expired_years)}</div>
       </div>
       <div class="dashboard-right">
         <div class="dashboard-count">${count}${r.capacity ? `<span class="dashboard-max">/${r.capacity}</span>` : ""}</div>
         ${fillBarHtml(count, r.capacity)}
       </div>
+      ${full ? `<button type="button" class="dashboard-done-btn" data-done="${r.number}" title="Film abschließen" aria-label="Film #${r.number} abschließen">✓</button>` : ""}
     </div>`;
 }
 
@@ -45,7 +45,7 @@ function lastFrameHtml(d: Dashboard): string {
       ${typeCornerHtml(f.roll.type)}
       <div>
         ${f.motif ? `<div class="frame-motiv">${escapeHtml(f.motif)}</div>` : ""}
-        <div class="frame-film">${escapeHtml(f.roll.camera_name)} · ${escapeHtml(f.roll.film_stock_name)} #${f.roll_number} · Nr. ${f.position}</div>
+        <div class="frame-film">${escapeHtml(f.roll.camera_name)} · #${f.roll_number} · Nr. ${f.position}</div>
         <div class="frame-meta">${escapeHtml(formatDate(f.date))} ${escapeHtml(f.time)}</div>
         ${settings ? `<div class="frame-meta">${settings}</div>` : ""}
       </div>
@@ -54,7 +54,7 @@ function lastFrameHtml(d: Dashboard): string {
 
 function developDesc(d: Dashboard): string {
   const t = d.to_develop;
-  if (!t.total) return "Protokolle, Status und Export";
+  if (!t.total) return "Alle Filme und ihr Status";
   const parts = (["sw", "farbe", "dia", "anderes"] as const)
     .filter((k) => t[k] > 0)
     .map((k) => `${TYPE_LABELS[k]} ${t[k]}`);
@@ -70,12 +70,10 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
       <a class="tile" href="#neue-aufnahme">
         <span class="tile-glyph">📷</span>
         <span class="tile-title">Aufnahme</span>
-        <span class="tile-desc">Neue Aufnahme eintragen</span>
       </a>
       <a class="tile" href="#neuer-film">
         <span class="tile-glyph">🎞️</span>
         <span class="tile-title">Neuer Film</span>
-        <span class="tile-desc">Neue Film-Kamera-Kombination beginnen</span>
       </a>
       <a class="tile" href="#filme">
         <span class="tile-glyph">📝</span>
@@ -113,6 +111,7 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
   if (!ctx.alive()) return;
 
   const hints = d.hints
+    .filter((h) => h.kind !== "voll" && h.kind !== "lange_in_kamera")
     .map(
       (h) => `<a class="hint hint-${escapeHtml(h.kind)}" href="#film/${h.roll_number}">
         <span class="hint-icon">${HINT_ICONS[h.kind] ?? "ℹ️"}</span><span>${escapeHtml(h.text)}</span></a>`,
@@ -132,7 +131,7 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
   qs(el, "#filmeDesc").textContent = developDesc(d);
 
   qsa(top, ".dashboard-card").forEach((card) => {
-    const open = () => navigate(`neue-aufnahme/${card.dataset.roll}`);
+    const open = () => navigate(`film/${card.dataset.roll}`);
     card.addEventListener("click", open);
     card.addEventListener("keydown", (ev) => {
       if ((ev.key === "Enter" || ev.key === " ") && ev.target === card) {

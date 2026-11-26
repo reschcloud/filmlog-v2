@@ -12,7 +12,7 @@ export function renderSearch(ctx: ViewContext): void {
   el.innerHTML = `
     <h1 class="view-title">Suche</h1>
     <p class="view-hint">Motive, Orte, Objektive, Kameras, Filme und Notizen.</p>
-    <div class="card">
+    <div class="card filter-sticky">
       <label>Suchbegriff
         <input type="search" id="searchInput" placeholder="z. B. Teich" autocomplete="off" value="${escapeHtml(lastQuery)}">
       </label>
@@ -64,9 +64,11 @@ export function renderSearch(ctx: ViewContext): void {
         </a>`,
         )
         .join("");
+      const frameCount = res.frames.length >= 50 ? "50+" : String(res.frames.length);
+      const rollCount = res.rolls.length >= 30 ? "30+" : String(res.rolls.length);
       out.innerHTML =
-        (frames ? `<p class="dashboard-label">Aufnahmen (${res.frames.length})</p><div class="eintraege-liste eintraege-liste-abstand">${frames}</div>` : "") +
-        (rolls ? `<p class="dashboard-label">Filme (${res.rolls.length})</p><div class="eintraege-liste eintraege-liste-abstand">${rolls}</div>` : "");
+        (frames ? `<p class="dashboard-label">Aufnahmen (${frameCount})</p><div class="eintraege-liste eintraege-liste-abstand">${frames}</div>` : "") +
+        (rolls ? `<p class="dashboard-label">Filme (${rollCount})</p><div class="eintraege-liste eintraege-liste-abstand">${rolls}</div>` : "");
     } catch (e) {
       if (my === seq && ctx.alive()) out.innerHTML = `<p class="error-msg">${escapeHtml(errMsg(e))}</p>`;
     }

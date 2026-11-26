@@ -3,6 +3,7 @@ import { getCatalog } from "../lib/data";
 import { nowTimeStr, todayStr } from "../lib/dates";
 import { optionsHtml, qs, qsa, setErrorState, setLoading, toast, withBusy } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
+import { NEXT } from "../lib/rollStatus";
 import { expiryPillHtml, frameMetaHtml, STATUS_LABELS, TYPE_LABELS, typeCornerHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Catalog, Frame, RollDetail } from "../types";
@@ -192,6 +193,7 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
 
   function paint(): void {
     const total = roll.frames.length;
+    const next = NEXT[roll.status];
     const iso = roll.iso_override ?? roll.iso;
     const info = [
       roll.camera.name,
@@ -211,7 +213,8 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       ${roll.notes ? `<p class="view-hint">${escapeHtml(roll.notes)}</p>` : ""}
       <div class="detail-actions">
         ${roll.status === "offen" ? `<a class="status-btn" href="#neue-aufnahme/${roll.number}">+ Aufnahme</a>` : ""}
-        ${readOnly() ? "" : `<button type="button" class="status-btn status-btn-back" data-act="meta">✏️ Bearbeiten</button>`}
+        ${next ? `<button type="button" class="status-btn" data-act="status">${escapeHtml(next.label)}</button>` : ""}
+        ${readOnly() ? "" : `<button type="button" class="status-btn status-btn-back" data-act="meta">✏️ Filmangaben</button>`}
         <a class="detail-csv-btn" href="/api/v2/rolls/${roll.number}/export.csv" download title="Als CSV herunterladen" aria-label="Als CSV herunterladen">📥</a>
       </div>
       ${readOnly() ? `<p class="offline-note">Archivierte Filme sind nur lesbar.</p>` : ""}
@@ -236,6 +239,23 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
   }
 
   function bind(): void {
+    const statusBtn = el.querySelector<HTMLButtonElement>("[data-act=status]");
+    if (statusBtn) {
+      statusBtn.onclick = async () => {
+        const step = NEXT[roll.status];
+        if (!step || !confirm(step.confirm(roll))) return;
+        await withBusy(statusBtn, async () => {
+          try {
+            await api.post(`/api/v2/rolls/${number}/status`, { status: step.to });
+            toast(`Film #${number}: ${step.label}.`, "ok");
+            await reload();
+          } catch (e) {
+            toast(errMsg(e), "error");
+          }
+        });
+      };
+    }
+
     const metaBtn = el.querySelector<HTMLButtonElement>("[data-act=meta]");
     if (metaBtn) {
       metaBtn.onclick = () => {

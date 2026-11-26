@@ -3,6 +3,7 @@ import { login } from "../lib/auth";
 import { qs, showError, withBusy } from "../lib/dom";
 
 export function renderLogin(el: HTMLElement, onSuccess: () => void): void {
+  el.classList.add("login-view");
   el.innerHTML = `
     <h1 class="view-title">Anmelden</h1>
     <form id="loginForm" class="card" autocomplete="on">

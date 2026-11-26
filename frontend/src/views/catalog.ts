@@ -141,7 +141,6 @@ export async function renderCatalog(ctx: ViewContext): Promise<void> {
   const { el } = ctx;
   el.innerHTML = `
     <h1 class="view-title">Auswahllisten</h1>
-    <p class="view-hint">Kameras, Objektive, Filmstocks, Belichtungszeiten und Blenden. Nicht mehr benötigte Einträge lassen sich archivieren.</p>
     <div id="catalogBody"></div>`;
   const body = qs(el, "#catalogBody");
   setLoading(body);
@@ -162,10 +161,10 @@ export async function renderCatalog(ctx: ViewContext): Promise<void> {
       .map((f) => {
         const v = item ? item[f.name] : f.kind === "select" ? f.options?.[0]?.value : "";
         if (f.kind === "select") {
-          return `<label>${escapeHtml(f.label)}<select name="${f.name}">${optionsHtml(f.options ?? [], str(v))}</select></label>`;
+          return `<label>${escapeHtml(f.label)}<select name="${f.name}"${f.required ? " required" : ""}>${optionsHtml(f.options ?? [], str(v))}</select></label>`;
         }
         if (f.kind === "number") {
-          return `<label>${escapeHtml(f.label)}<input type="number" name="${f.name}" step="${f.step ?? "1"}" inputmode="decimal" min="0" value="${escapeHtml(str(v))}"></label>`;
+          return `<label>${escapeHtml(f.label)}<input type="number" name="${f.name}" step="${f.step ?? "1"}" inputmode="decimal" min="0" value="${escapeHtml(str(v))}"${f.required ? " required" : ""}></label>`;
         }
         return `<label>${escapeHtml(f.label)}<input type="text" name="${f.name}" value="${escapeHtml(str(v))}"${f.required ? " required" : ""}${f.placeholder ? ` placeholder="${escapeHtml(f.placeholder)}"` : ""}></label>`;
       })

@@ -3,56 +3,29 @@ import { formatDate } from "../lib/dates";
 import { qs, setErrorState, setLoading, toast } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { navigate } from "../lib/nav";
+import { NEXT, PREV, STATUS_DATE_LABEL } from "../lib/rollStatus";
 import { expiryPillHtml, STATUS_LABELS, typeCornerHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Roll, RollStatus } from "../types";
-
-interface Step {
-  to: RollStatus;
-  label: string;
-  confirm: (r: Roll) => string;
-}
-
-const NEXT: Partial<Record<RollStatus, Step>> = {
-  offen: {
-    to: "abgeschlossen",
-    label: "Abschließen",
-    confirm: (r) => `Film #${r.number} (${r.camera.name}) wirklich abschließen?`,
-  },
-  abgeschlossen: { to: "entwickelt", label: "Entwickelt", confirm: (r) => `Film #${r.number} als entwickelt markieren?` },
-  entwickelt: { to: "gescannt", label: "Gescannt", confirm: (r) => `Film #${r.number} als gescannt markieren?` },
-  gescannt: { to: "archiviert", label: "Archivieren", confirm: (r) => `Film #${r.number} archivieren? Archivierte Filme sind nur noch lesbar.` },
-};
-
-const PREV: Partial<Record<RollStatus, Step>> = {
-  abgeschlossen: {
-    to: "offen",
-    label: "Wieder öffnen",
-    confirm: (r) => `Film #${r.number} wieder öffnen? Danach können erneut Aufnahmen hinzugefügt werden.`,
-  },
-  entwickelt: { to: "abgeschlossen", label: "Nicht entwickelt", confirm: (r) => `Film #${r.number} wieder auf „abgeschlossen“ zurücksetzen?` },
-  gescannt: { to: "entwickelt", label: "Nicht gescannt", confirm: (r) => `Film #${r.number} wieder auf „entwickelt“ zurücksetzen?` },
-  archiviert: { to: "gescannt", label: "Dearchivieren", confirm: (r) => `Film #${r.number} dearchivieren?` },
-};
 
 let showArchived = false;
 
 function rowHtml(r: Roll): string {
   const next = NEXT[r.status];
   const prev = PREV[r.status];
-  const dates: string[] = [];
-  if (r.created_at) dates.push(`Angelegt: ${formatDate(r.created_at)}`);
-  if (r.completed_at) dates.push(`Abgeschlossen: ${formatDate(r.completed_at)}`);
-  if (r.developed_at) dates.push(`Entwickelt: ${formatDate(r.developed_at)}`);
-  if (r.scanned_at) dates.push(`Gescannt: ${formatDate(r.scanned_at)}`);
-  if (r.archived_at) dates.push(`Archiviert: ${formatDate(r.archived_at)}`);
+  const statusDate =
+    r.status === "archiviert" ? r.archived_at
+    : r.status === "gescannt" ? r.scanned_at
+    : r.status === "entwickelt" ? r.developed_at
+    : r.status === "abgeschlossen" ? r.completed_at
+    : r.created_at;
   return `
     <div class="download-row roll-row download-row-klickbar" data-roll="${r.number}">
       ${typeCornerHtml(r.film_stock.type)}
       <div class="download-row-info">
         <div class="download-row-title">#${r.number} — ${escapeHtml(r.film_stock.name)}</div>
         <div class="download-row-meta">${escapeHtml(r.camera.name)} · ${r.frame_count}${r.capacity ? `/${r.capacity}` : ""} Aufnahmen ${expiryPillHtml(r.expired_years)}</div>
-        ${dates.map((d) => `<div class="download-row-meta">${escapeHtml(d)}</div>`).join("")}
+        ${statusDate ? `<div class="download-row-meta">${STATUS_DATE_LABEL[r.status]}: ${formatDate(statusDate)}</div>` : ""}
       </div>
       <div class="roll-actions">
         ${prev ? `<button type="button" class="status-btn status-btn-back" data-act="prev" data-roll="${r.number}">↩ ${escapeHtml(prev.label)}</button>` : ""}
@@ -70,8 +43,8 @@ function group(title: string, rolls: Roll[]): string {
 export async function renderRolls(ctx: ViewContext): Promise<void> {
   const { el } = ctx;
   el.innerHTML = `
-    <h1 class="view-title">Filme &amp; Protokolle</h1>
-    <label class="archiv-toggle">
+    <h1 class="view-title">Filme</h1>
+    <label class="archiv-toggle filter-sticky">
       <input type="checkbox" id="archivCheckbox"${showArchived ? " checked" : ""}>
       Archivierte anzeigen
     </label>
@@ -108,7 +81,7 @@ export async function renderRolls(ctx: ViewContext): Promise<void> {
   }
 
   async function load(): Promise<void> {
-    setLoading(list);
+    if (!list.childElementCount) setLoading(list);
     try {
       const statuses = ["offen", "abgeschlossen", "entwickelt", "gescannt"];
       if (showArchived) statuses.push("archiviert");

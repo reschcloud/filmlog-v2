@@ -53,12 +53,6 @@ export function renderSettings(ctx: ViewContext): void {
   el.innerHTML = `
     <h1 class="view-title">Einstellungen</h1>
 
-    <p class="dashboard-label">Konto</p>
-    <div class="card">
-      <p class="field-note">Angemeldet als <strong>${escapeHtml(session.username ?? "–")}</strong></p>
-      <button type="button" class="btn-primary btn-danger" id="logoutBtn">Abmelden</button>
-    </div>
-
     <p class="dashboard-label">Passwort ändern</p>
     <form class="card" id="pwForm" autocomplete="off">
       <label>Aktuelles Passwort<input type="password" name="current" autocomplete="current-password" required></label>
@@ -75,13 +69,15 @@ export function renderSettings(ctx: ViewContext): void {
         <button type="submit" class="btn-primary">Anlegen</button>
       </form>
       <div id="tokenNew"></div>
+      <a class="btn-link" href="/client/download" download>💻 EXIF-Client herunterladen</a>
     </div>
 
     <p class="dashboard-label">Import aus Filmlog v1</p>
     <form class="card" id="importForm">
       <label>db.yaml <input type="file" name="db" accept=".yaml,.yml,text/yaml,text/plain" required></label>
       <label>optionen.yaml <span class="field-optional">(optional)</span><input type="file" name="optionen" accept=".yaml,.yml,text/yaml,text/plain"></label>
-      <button type="submit" class="btn-primary" id="dryBtn">Probelauf</button>
+      <p class="field-note">Zuerst Probelauf und Vorschau, danach Import bestätigen.</p>
+      <button type="submit" class="btn-primary" id="dryBtn">Probelauf &amp; Vorschau</button>
       <div id="importResult"></div>
     </form>
 
@@ -89,7 +85,12 @@ export function renderSettings(ctx: ViewContext): void {
     <div class="card">
       <a class="btn-link" href="/api/v2/export.json" download>📄 Export als JSON</a>
       <a class="btn-link" href="/api/v2/backup.sqlite" download>🗄️ Backup (SQLite)</a>
-      <a class="btn-link" href="/client/download" download>💻 EXIF-Client herunterladen</a>
+    </div>
+
+    <p class="dashboard-label">Konto</p>
+    <div class="card">
+      <p class="field-note">Angemeldet als <strong>${escapeHtml(session.username ?? "–")}</strong></p>
+      <button type="button" class="status-btn status-btn-back" id="logoutBtn">Abmelden</button>
     </div>`;
 
   // ---- Abmelden ----

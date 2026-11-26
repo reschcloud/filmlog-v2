@@ -7,8 +7,6 @@ import type { FilmType, Stats, StatsItem } from "../types";
 
 type Range = "30" | "365" | "alle";
 
-const CACHE_MS = 5 * 60 * 1000;
-const cache = new Map<Range, { t: number; s: Stats }>();
 let currentRange: Range = "30";
 
 function cornerClass(type: FilmType | string | undefined): string {
@@ -117,7 +115,7 @@ export async function renderStats(ctx: ViewContext): Promise<void> {
   el.innerHTML = `
     <h1 class="view-title">Stats</h1>
     <p class="view-hint">Aufnahmen zählen nach Aufnahmedatum, Filme nach Anlegedatum.</p>
-    <div class="stats-tabs">
+    <div class="stats-tabs filter-sticky">
       <button type="button" class="stats-tab" data-range="30">30 Tage</button>
       <button type="button" class="stats-tab" data-range="365">365 Tage</button>
       <button type="button" class="stats-tab" data-range="alle">Alles</button>
@@ -141,15 +139,14 @@ export async function renderStats(ctx: ViewContext): Promise<void> {
     const hasMap = s.locations.some((l) => Number.isFinite(l.lat) && Number.isFinite(l.lon));
     content.innerHTML = `
       <p class="stats-gesamt"><span>${s.frames_total}</span> ${s.frames_total === 1 ? "Aufnahme" : "Aufnahmen"} · <span>${s.rolls_total}</span> ${s.rolls_total === 1 ? "Film" : "Filme"}</p>
-      ${hasMap ? `<p class="dashboard-label">Karte (${s.locations.length} Orte)</p><div id="statsMap" class="stats-map"></div>` : ""}
       ${ranking("Filmtyp", s.by_type)}
       ${ranking("Kamera", s.by_camera)}
       ${ranking("Filmstock", s.by_film_stock)}
-      ${ranking("Filme pro Filmstock", s.rolls_by_film_stock)}
       ${ranking("Objektiv", s.by_lens)}
       ${distribution("Belichtungszeit", s.by_shutter)}
       ${distribution("Blende", s.by_aperture)}
-      ${monthChart(s.by_month)}`;
+      ${monthChart(s.by_month)}
+      ${hasMap ? `<p class="dashboard-label">Karte (${s.locations.length} Orte)</p><div id="statsMap" class="stats-map"></div>` : ""}`;
     const month = content.querySelector<HTMLElement>(".month-scroll");
     if (month) month.scrollLeft = month.scrollWidth;
     const mapEl = content.querySelector<HTMLElement>("#statsMap");
@@ -164,15 +161,9 @@ export async function renderStats(ctx: ViewContext): Promise<void> {
     currentRange = range;
     mark();
     const my = ++seq;
-    const cached = cache.get(range);
-    if (cached && Date.now() - cached.t < CACHE_MS) {
-      paint(cached.s);
-      return;
-    }
     setLoading(content);
     try {
       const s = await api.get<Stats>(`/api/v2/stats?range=${range}`);
-      cache.set(range, { t: Date.now(), s });
       if (my === seq && ctx.alive()) paint(s);
     } catch (e) {
       if (my === seq && ctx.alive()) setErrorState(content, e);
