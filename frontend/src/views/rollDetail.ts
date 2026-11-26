@@ -118,13 +118,13 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
         <label>Motivbeschreibung
           <textarea name="motif" rows="2" placeholder="Was ist auf dem Bild zu sehen?"></textarea>
         </label>
-        <div class="field-row">
+        <div class="field-row field-row-objektiv">
           <label>Objektiv <select name="lens"></select></label>
           <div class="blitz-feld">
             <label class="blitz-toggle"><input type="checkbox" name="flash"> Blitz</label>
           </div>
         </div>
-        <div class="field-row">
+        <div class="field-row field-row-pair">
           <label>Belichtungszeit <select name="shutter"></select></label>
           <label>Blende <select name="aperture"></select></label>
         </div>
@@ -211,8 +211,8 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       ${roll.notes ? `<p class="view-hint">${escapeHtml(roll.notes)}</p>` : ""}
       <div class="detail-actions">
         ${roll.status === "offen" ? `<a class="status-btn" href="#neue-aufnahme/${roll.number}">+ Aufnahme</a>` : ""}
-        ${readOnly() ? "" : `<button type="button" class="status-btn status-btn-back" data-act="meta">✏️ Film bearbeiten</button>`}
-        <a class="status-btn status-btn-back" href="/api/v2/rolls/${roll.number}/export.csv" download>📥 CSV</a>
+        ${readOnly() ? "" : `<button type="button" class="status-btn status-btn-back" data-act="meta">✏️ Bearbeiten</button>`}
+        <a class="detail-csv-btn" href="/api/v2/rolls/${roll.number}/export.csv" download title="Als CSV herunterladen" aria-label="Als CSV herunterladen">📥</a>
       </div>
       ${readOnly() ? `<p class="offline-note">Archivierte Filme sind nur lesbar.</p>` : ""}
       ${metaOpen && !readOnly() ? metaFormHtml() : ""}

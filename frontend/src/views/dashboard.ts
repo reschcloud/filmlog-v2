@@ -74,7 +74,7 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
       </a>
       <a class="tile" href="#neuer-film">
         <span class="tile-glyph">🎞️</span>
-        <span class="tile-title">Neu</span>
+        <span class="tile-title">Neuer Film</span>
         <span class="tile-desc">Neue Film-Kamera-Kombination beginnen</span>
       </a>
       <a class="tile" href="#filme">
@@ -94,7 +94,7 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
       </a>
       <a class="tile" href="#optionen">
         <span class="tile-glyph">⚙️</span>
-        <span class="tile-title">Optionen</span>
+        <span class="tile-title">Auswahllisten</span>
         <span class="tile-desc">Kameras, Objektive, Filme &amp; Co. verwalten</span>
       </a>
       <a class="tile" href="#einstellungen">

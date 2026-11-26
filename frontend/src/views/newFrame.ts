@@ -58,10 +58,11 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
           <textarea name="motif" id="motifInput" rows="1" placeholder="Was ist auf dem Bild zu sehen?"></textarea>
           <button type="button" class="now-btn" id="motifClear" title="Motivbeschreibung leeren" aria-label="Motivbeschreibung leeren">✕</button>
         </div>
-        <div class="suggest-list" id="motifSuggest" hidden></div>
       </label>
+      <!-- Außerhalb des <label>: Klicks auf die Vorschläge dürfen das Textfeld nicht fokussieren. -->
+      <div class="suggest-list" id="motifSuggest" hidden></div>
 
-      <div class="field-row">
+      <div class="field-row field-row-objektiv">
         <label>Objektiv
           <select name="lens" id="lensSel"></select>
         </label>
@@ -73,7 +74,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         </div>
       </div>
 
-      <div class="field-row">
+      <div class="field-row field-row-pair">
         <label>Belichtungszeit
           <select name="shutter" id="shutterSel"></select>
         </label>
@@ -81,8 +82,6 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
           <select name="aperture" id="apertureSel"></select>
         </label>
       </div>
-
-      <button type="submit" class="btn-primary">Aufnahme speichern</button>
 
       <label>Ort
         <input type="text" name="place" id="placeInput" placeholder="wird per GPS ermittelt, bei Bedarf anpassen">
@@ -297,7 +296,10 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   }
   placeChips.addEventListener("click", (ev) => {
     const chip = (ev.target as HTMLElement).closest<HTMLButtonElement>(".chip");
-    if (chip) setPlace(chip.dataset.place ?? "", false);
+    if (!chip) return;
+    // preventDefault: verhindert, dass das umgebende <label> das Ortsfeld fokussiert (iOS-Tastatur/Scroll).
+    ev.preventDefault();
+    setPlace(chip.dataset.place ?? "", false);
   });
 
   if ("geolocation" in navigator) {

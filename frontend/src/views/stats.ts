@@ -58,14 +58,16 @@ function distribution(title: string, items: StatsItem[]): string {
 function monthChart(months: Stats["by_month"]): string {
   if (!months.length) return "";
   const max = Math.max(1, ...months.map((m) => m.frames));
+  // Bei vielen Monaten zeigt jedes zweite Spalte ein Label (das letzte immer), damit nichts gedrängt wirkt.
+  const showLabel = (i: number) => months.length <= 8 || i % 2 === 0 || i === months.length - 1;
   const cols = months
-    .map((m) => {
+    .map((m, i) => {
       const h = Math.max(2, Math.round((m.frames / max) * 100));
       return `
       <div class="month-col" title="${escapeHtml(formatMonth(m.month))}: ${m.frames} Aufnahmen, ${m.rolls} Filme">
         <span class="month-val">${m.frames}</span>
         <span class="month-bar" style="height:${h}px"></span>
-        <span class="month-label">${escapeHtml(formatMonth(m.month))}</span>
+        ${showLabel(i) ? `<span class="month-label">${escapeHtml(formatMonth(m.month))}</span>` : ""}
       </div>`;
     })
     .join("");

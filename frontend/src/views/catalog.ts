@@ -140,7 +140,7 @@ const openSections = new Set<string>();
 export async function renderCatalog(ctx: ViewContext): Promise<void> {
   const { el } = ctx;
   el.innerHTML = `
-    <h1 class="view-title">Optionen</h1>
+    <h1 class="view-title">Auswahllisten</h1>
     <p class="view-hint">Kameras, Objektive, Filmstocks, Belichtungszeiten und Blenden. Nicht mehr benötigte Einträge lassen sich archivieren.</p>
     <div id="catalogBody"></div>`;
   const body = qs(el, "#catalogBody");
