@@ -283,16 +283,25 @@ def _fts_query(q: str) -> str | None:
 
 
 @router.get("/search")
-def search(q: str = Query("", max_length=200), db: Session = Depends(get_db)):
+def search(q: str = Query("", max_length=200),
+           frame_offset: int = Query(0, ge=0), roll_offset: int = Query(0, ge=0),
+           frame_limit: int = Query(50, ge=1, le=100), roll_limit: int = Query(30, ge=1, le=100),
+           db: Session = Depends(get_db)):
     q = q.strip()
     if not q:
-        return {"frames": [], "rolls": []}
+        return {"frames": [], "rolls": [], "frames_has_more": False, "rolls_has_more": False}
+
     frames: list[Frame] = []
+    frames_has_more = False
     fts = _fts_query(q)
     if fts:
-        ids = [row[0] for row in db.execute(
-            text("SELECT rowid FROM frames_fts WHERE frames_fts MATCH :q ORDER BY rank LIMIT 50"), {"q": fts}
-        )]
+        rows = db.execute(
+            text("SELECT rowid FROM frames_fts WHERE frames_fts MATCH :q "
+                 "ORDER BY rank LIMIT :limit OFFSET :offset"),
+            {"q": fts, "limit": frame_limit + 1, "offset": frame_offset},
+        ).all()
+        frames_has_more = len(rows) > frame_limit
+        ids = [row[0] for row in rows[:frame_limit]]
         if ids:
             by_id = {f.id: f for f in db.scalars(select(Frame).where(Frame.id.in_(ids)))}
             frames = [by_id[i] for i in ids if i in by_id]
@@ -302,11 +311,14 @@ def search(q: str = Query("", max_length=200), db: Session = Depends(get_db)):
     roll_q = (
         select(Roll).join(Camera, Roll.camera_id == Camera.id).join(FilmStock, Roll.film_stock_id == FilmStock.id)
         .where(or_(Camera.name.ilike(like), FilmStock.name.ilike(like), Roll.notes.ilike(like), *number_match))
-        .order_by(Roll.number.desc()).limit(30)
+        .order_by(Roll.number.desc()).offset(roll_offset).limit(roll_limit + 1)
     )
-    rolls = list(db.scalars(roll_q).unique())
+    rolled = list(db.scalars(roll_q).unique())
+    rolls_has_more = len(rolled) > roll_limit
+    rolls = rolled[:roll_limit]
     return {"frames": [services.frame_dict(f, with_roll=True) for f in frames],
-            "rolls": [services.roll_dict(r) for r in rolls]}
+            "rolls": [services.roll_dict(r) for r in rolls],
+            "frames_has_more": frames_has_more, "rolls_has_more": rolls_has_more}
 
 
 # ---------- Vorschlaege ----------

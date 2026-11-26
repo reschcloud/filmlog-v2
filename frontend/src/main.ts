@@ -4,7 +4,7 @@ import { setUnauthorizedHandler } from "./api";
 import { fetchMe } from "./lib/auth";
 import { setErrorState, toast } from "./lib/dom";
 import { EVT_QUEUE, EVT_SYNCED } from "./lib/events";
-import { currentRoute, setRerender } from "./lib/nav";
+import { currentRoute, navigate, setRerender } from "./lib/nav";
 import { flushQueue, queueCount, type FlushResult } from "./lib/queue";
 import type { ViewContext, ViewFn } from "./lib/view";
 import { renderCatalog } from "./views/catalog";
@@ -32,12 +32,10 @@ const routes: Record<string, ViewFn> = {
   einstellungen: renderSettings,
 };
 
-// Versionskennung (aus package.json, beim Build injiziert) ins Logo und den Tab-Titel.
-const brandVersion = document.querySelector(".brand-version");
-if (brandVersion) brandVersion.textContent = `v${__APP_VERSION__}`;
 document.title = `Filmlog v${__APP_VERSION__}`;
 
 const app = document.getElementById("app") as HTMLElement;
+const backBtn = document.getElementById("backBtn") as HTMLButtonElement;
 const queueBadge = document.getElementById("queueBadge") as HTMLButtonElement;
 const netBadge = document.getElementById("netBadge") as HTMLElement;
 
@@ -50,6 +48,7 @@ function renderRoute(): void {
   const my = ++renderToken;
   const { name, params } = currentRoute();
   const fn = routes[name] ?? routes.start;
+  backBtn.hidden = name === "start";
   const el = document.createElement("section");
   el.className = "view";
   app.replaceChildren(el);
@@ -66,6 +65,7 @@ function showLogin(): void {
   if (loginShown) return;
   loginShown = true;
   loggedIn = false;
+  backBtn.hidden = true;
   renderToken++;
   document.body.classList.add("logged-out");
   const el = document.createElement("section");
@@ -118,6 +118,11 @@ window.addEventListener("hashchange", renderRoute);
 // Auf der Startseite ändert der Logo-Klick den Hash nicht – dann nach oben scrollen.
 document.querySelector<HTMLAnchorElement>(".brand")?.addEventListener("click", () => {
   if (location.hash === "#start") window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+backBtn.addEventListener("click", () => {
+  if (history.length > 1) history.back();
+  else navigate("start");
 });
 
 window.addEventListener(EVT_QUEUE, () => void updateBadge());

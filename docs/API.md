@@ -127,7 +127,7 @@ Bei Belichtungszeit/Blende genügt `{"label":"125"}`.
 
 ## Suche
 
-| GET | `/api/v2/search?q=teich` | `{"frames":[FrameWithRoll],"rolls":[Roll]}` (FTS5 über Motiv/Ort/Objektiv, Rolls über Kamera/Film/Notizen) |
+| GET | `/api/v2/search?q=teich&frame_offset=0&roll_offset=0&frame_limit=50&roll_limit=30` | `{"frames":[FrameWithRoll],"rolls":[Roll],"frames_has_more":false,"rolls_has_more":false}` (FTS5 über Motiv/Ort/Objektiv, Rolls über Kamera/Film/Notizen; `*_offset`/`*_limit` für Paginierung) |
 
 ## Statistik
 

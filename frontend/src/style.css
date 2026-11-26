@@ -70,7 +70,7 @@ body {
   margin: 0 auto;
   padding: calc(8px + env(safe-area-inset-top)) clamp(16px, 5vw, 48px) 8px;
   gap: 12px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .brand {
@@ -91,15 +91,9 @@ body {
   line-height: 1;
 }
 .brand-mark-accent { color: var(--red-bright); }
-.brand-version {
-  font-family: var(--font-mono);
-  font-size: 0.42em;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  vertical-align: super;
-  margin-left: 0.5em;
-}
+.header-left { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.nav-back { font-size: 24px; line-height: 1; padding-bottom: 2px; }
+.nav-back[hidden] { display: none; }
 
 #app {
   box-sizing: border-box;
@@ -913,12 +907,6 @@ button, .anzahl-btn, .add-btn {
 .stats-more summary::before { content: "▸ "; color: var(--amber); }
 .stats-more[open] summary::before { content: "▾ "; }
 .stats-more[open] summary { padding-bottom: 2px; }
-.search-note {
-  margin: 10px 0 0;
-  font-family: var(--font-serif);
-  font-size: var(--small);
-  color: var(--muted);
-}
 
 .stats-gesamt {
   margin: 0 0 4px;
@@ -999,10 +987,16 @@ a.letzte-aufnahme { color: inherit; display: block; position: relative; }
 }
 .queue-badge[hidden], .net-badge[hidden] { display: none; }
 .net-badge {
+  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
   font-family: var(--font-mono); font-size: var(--x-small); font-weight: 700;
-  text-transform: uppercase; background: var(--red); color: var(--paper);
-  border-radius: 999px; padding: 4px 8px;
+  text-transform: uppercase; color: var(--red-bright);
 }
+.net-badge::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red-bright); box-shadow: 0 0 0 2px rgba(242,234,217,0.35);
+}
+.net-text { display: none; }
+@media (min-width: 480px) { .net-text { display: inline; } }
 
 /* Toasts */
 .toasts {
@@ -1194,8 +1188,12 @@ a.tile { min-height: 44px; }
 #tokenCard { gap: 12px; }
 
 @media (max-width: 400px) {
+  .app-header, #app { padding-left: 12px; padding-right: 12px; }
   .dist-row { grid-template-columns: 56px 1fr 30px; }
   .queue-badge { padding: 9px 10px 6px; }
+}
+@media (max-width: 340px) {
+  .app-header, .header-actions { gap: 8px; }
 }
 
 .card label.blitz-toggle { flex-direction: row; align-items: center; gap: 8px; min-height: 44px; margin-top: 0; font-size: var(--medium); }

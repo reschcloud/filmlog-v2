@@ -90,6 +90,7 @@ export function renderSettings(ctx: ViewContext): void {
     <p class="dashboard-label">Konto</p>
     <div class="card">
       <p class="field-note">Angemeldet als <strong>${escapeHtml(session.username ?? "–")}</strong></p>
+      <p class="field-note">Version ${__APP_VERSION__}</p>
       <button type="button" class="status-btn status-btn-back" id="logoutBtn">Abmelden</button>
     </div>`;
 

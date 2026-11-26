@@ -154,6 +154,8 @@ export interface PlaceSuggestion {
 export interface SearchResult {
   frames: FrameWithRoll[];
   rolls: Roll[];
+  frames_has_more: boolean;
+  rolls_has_more: boolean;
 }
 
 export interface RecentFrames {

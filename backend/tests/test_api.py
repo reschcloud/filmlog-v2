@@ -256,6 +256,24 @@ def test_search(client, basics):
     assert client.get('/api/v2/search?q="*').status_code == 200
 
 
+def test_search_pagination(client, basics):
+    _roll(client, basics)
+    for i in range(3):
+        _frames(client, 1, motif=f"Motiv {i}")
+    first = client.get("/api/v2/search?q=motiv&frame_limit=2").json()
+    assert len(first["frames"]) == 2 and first["frames_has_more"] is True
+    second = client.get("/api/v2/search?q=motiv&frame_limit=2&frame_offset=2").json()
+    assert len(second["frames"]) == 1 and second["frames_has_more"] is False
+    assert {f["motif"] for f in first["frames"] + second["frames"]} == {"Motiv 0", "Motiv 1", "Motiv 2"}
+
+    _roll(client, basics)
+    rolls1 = client.get("/api/v2/search?q=zenit&roll_limit=1").json()
+    assert len(rolls1["rolls"]) == 1 and rolls1["rolls_has_more"] is True
+    rolls2 = client.get("/api/v2/search?q=zenit&roll_limit=1&roll_offset=1").json()
+    assert len(rolls2["rolls"]) == 1 and rolls2["rolls_has_more"] is False
+    assert rolls1["rolls"][0]["number"] != rolls2["rolls"][0]["number"]
+
+
 def test_stats(client, basics):
     from datetime import date
     today = date.today().isoformat()
