@@ -30,8 +30,6 @@ function rowHtml(r: Roll): string {
       <div class="roll-actions">
         ${prev ? `<button type="button" class="status-btn status-btn-back" data-act="prev" data-roll="${r.number}">↩ ${escapeHtml(prev.label)}</button>` : ""}
         ${next ? `<button type="button" class="status-btn" data-act="next" data-roll="${r.number}">${escapeHtml(next.label)}</button>` : ""}
-        <a class="download-btn" href="/api/v2/rolls/${r.number}/export.csv" download title="Als CSV herunterladen" aria-label="CSV herunterladen">📥</a>
-        ${r.status !== "offen" ? `<button type="button" class="eintrag-del-btn" data-act="del" data-roll="${r.number}" title="Film löschen" aria-label="Film #${r.number} löschen">🗑️</button>` : ""}
       </div>
     </div>`;
 }
@@ -102,15 +100,9 @@ export async function renderRolls(ctx: ViewContext): Promise<void> {
       const act = btn.dataset.act;
       btn.disabled = true;
       try {
-        if (act === "del") {
-          if (!confirm(`Film #${roll.number} (${roll.film_stock.name}) mit allen ${roll.frame_count} Aufnahmen endgültig löschen?`)) return;
-          await api.del(`/api/v2/rolls/${roll.number}`);
-          toast(`Film #${roll.number} gelöscht.`, "ok");
-        } else {
-          const step = act === "next" ? NEXT[roll.status] : PREV[roll.status];
-          if (!step || !confirm(step.confirm(roll))) return;
-          await api.post(`/api/v2/rolls/${roll.number}/status`, { status: step.to });
-        }
+        const step = act === "next" ? NEXT[roll.status] : PREV[roll.status];
+        if (!step || !confirm(step.confirm(roll))) return;
+        await api.post(`/api/v2/rolls/${roll.number}/status`, { status: step.to });
         await load();
       } catch (e) {
         toast(errMsg(e), "error");

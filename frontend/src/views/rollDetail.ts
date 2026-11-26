@@ -3,6 +3,7 @@ import { getCatalog } from "../lib/data";
 import { nowTimeStr, todayStr } from "../lib/dates";
 import { optionsHtml, qs, qsa, setErrorState, setLoading, toast, withBusy } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
+import { navigate } from "../lib/nav";
 import { NEXT } from "../lib/rollStatus";
 import { expiryPillHtml, frameMetaHtml, STATUS_LABELS, TYPE_LABELS, typeCornerHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
@@ -216,6 +217,7 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
         ${next ? `<button type="button" class="status-btn" data-act="status">${escapeHtml(next.label)}</button>` : ""}
         ${readOnly() ? "" : `<button type="button" class="status-btn status-btn-back" data-act="meta">✏️ Filmangaben</button>`}
         <a class="detail-csv-btn" href="/api/v2/rolls/${roll.number}/export.csv" download title="Als CSV herunterladen" aria-label="Als CSV herunterladen">📥</a>
+        ${roll.status !== "offen" ? `<button type="button" class="detail-csv-btn detail-del-btn" data-act="delete" title="Film löschen" aria-label="Film #${roll.number} löschen">🗑️</button>` : ""}
       </div>
       ${readOnly() ? `<p class="offline-note">Archivierte Filme sind nur lesbar.</p>` : ""}
       ${metaOpen && !readOnly() ? metaFormHtml() : ""}
@@ -249,6 +251,22 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
             await api.post(`/api/v2/rolls/${number}/status`, { status: step.to });
             toast(`Film #${number}: ${step.label}.`, "ok");
             await reload();
+          } catch (e) {
+            toast(errMsg(e), "error");
+          }
+        });
+      };
+    }
+
+    const delBtn = el.querySelector<HTMLButtonElement>("[data-act=delete]");
+    if (delBtn) {
+      delBtn.onclick = async () => {
+        if (!confirm(`Film #${number} (${roll.film_stock.name}) mit allen ${roll.frames.length} Aufnahmen endgültig löschen?`)) return;
+        await withBusy(delBtn, async () => {
+          try {
+            await api.del(`/api/v2/rolls/${number}`);
+            toast(`Film #${number} gelöscht.`, "ok");
+            navigate("filme");
           } catch (e) {
             toast(errMsg(e), "error");
           }

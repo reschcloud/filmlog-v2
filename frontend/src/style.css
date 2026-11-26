@@ -425,20 +425,6 @@ body {
   color: var(--ink-soft);
   margin-top: 2px;
 }
-.download-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: none;
-  text-decoration: none;
-  font-size: 18px;
-}
-.download-btn:hover { background: var(--paper-dim); }
-
 .error-msg {
   color: var(--red-bright);
   font-family: var(--font-mono);
@@ -1074,6 +1060,7 @@ a.tile { min-height: 44px; }
   text-decoration: none; cursor: pointer;
 }
 .detail-csv-btn:hover { background: var(--amber-dim); border-color: var(--amber-dim); }
+.detail-del-btn:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
 .detail-actions .status-btn-back { color: var(--paper-dim); border-color: rgba(242,234,217,0.4); }
 .detail-actions .status-btn-back:hover { color: var(--paper); background: var(--amber-dim); }
 .detail-liste .eintrag-form { margin: 4px 0; }
@@ -1161,6 +1148,8 @@ a.tile { min-height: 44px; }
 .cat-body > .status-btn { align-self: flex-start; }
 .cat-list .cat-row .status-btn { min-height: 40px; padding: 8px 12px 6px; }
 .cat-list .empty-state { padding: 6px 2px; }
+.cat-form fieldset { border: 0; padding: 0; }
+.cat-form legend { padding: 0; }
 
 /* Einstellungen */
 .report-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
