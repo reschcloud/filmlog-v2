@@ -82,11 +82,6 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
         <span class="tile-title">Filme</span>
         <span class="tile-desc" id="filmeDesc">Protokolle, Status und Export</span>
       </a>
-      <a class="tile" href="#suche">
-        <span class="tile-glyph">🔍</span>
-        <span class="tile-title">Suche</span>
-        <span class="tile-desc">Motive, Orte, Filme und Kameras durchsuchen</span>
-      </a>
       <a class="tile" href="#stats">
         <span class="tile-glyph">📊</span>
         <span class="tile-title">Stats</span>
