@@ -84,7 +84,11 @@ async function drawMap(container: HTMLElement, locations: Stats["locations"], al
   const [mod] = await Promise.all([import("leaflet"), import("leaflet/dist/leaflet.css")]);
   if (!alive() || !container.isConnected) return;
   const L = ((mod as unknown as { default?: typeof import("leaflet") }).default ?? mod) as typeof import("leaflet");
+  // Mausrad-Zoom erst nach einem Klick in die Karte (sonst "klaut" das Rad das Scrollen der Seite);
+  // beim Verlassen der Karte wieder aus. Capture-Phase, damit auch Marker-Klicks aktivieren.
   const map = L.map(container, { scrollWheelZoom: false });
+  container.addEventListener("click", () => map.scrollWheelZoom.enable(), true);
+  map.on("mouseout", () => map.scrollWheelZoom.disable());
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',

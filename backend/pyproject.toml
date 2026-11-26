@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "filmlog"
-version = "2.3.1"
+version = "2.3.2"
 description = "Analoges Aufnahmeprotokoll"
 requires-python = ">=3.11"
 license = { text = "GPL-3.0-or-later" }
