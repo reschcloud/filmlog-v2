@@ -70,3 +70,18 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Bei jedem Push eines v*-Tags automatisch ein Release mit generierten Notes anlegen.
+  release:
+    needs: [image]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Filmlog ${{ github.ref_name }}
+          generate_release_notes: true
