@@ -5,6 +5,10 @@
 
 .theme {
   color-scheme: dark;
+  /* Untere Navigation: Der Home-Indikator braucht ~34 pt; den Rest der
+     Safari-Safe-Area (eingeklappte Werkzeugleiste) nicht doppelt reservieren. */
+  --nav-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nav-bottom-pad: max(4px, calc(var(--nav-safe-bottom) - 34px));
   --bg: #17130f;
   --bg-soft: #211b15;
   --paper: #f1ece2;
@@ -106,9 +110,11 @@
 .theme .bottom-nav {
   background: var(--bg);
   border-top: 1px solid rgba(241, 236, 226, 0.14);
+  padding-bottom: 0;
 }
 .theme .bottom-nav a {
-  min-height: 64px;
+  min-height: calc(64px + var(--nav-bottom-pad));
+  padding: 6px 4px calc(6px + var(--nav-bottom-pad));
   font-family: var(--font-mono);
   font-size: var(--medium);
   font-weight: 600;
@@ -129,8 +135,8 @@
   color: var(--paper);
   font-size: var(--small);
 }
-.theme .nav-visible #app { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
-.theme .nav-visible .toasts { bottom: calc(84px + env(safe-area-inset-bottom)); }
+.theme .nav-visible #app { padding-bottom: calc(80px + var(--nav-bottom-pad)); }
+.theme .nav-visible .toasts { bottom: calc(72px + var(--nav-bottom-pad)); }
 
 /* ---- Grundflächen ---- */
 .theme #app {
