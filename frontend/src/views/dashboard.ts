@@ -5,7 +5,7 @@ import { qs, qsa } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { navigate } from "../lib/nav";
 import { queuedFramesByRoll } from "../lib/queue";
-import { expiryPillHtml, fillBarHtml, typeBadgeHtml } from "../lib/ui";
+import { expiryPillHtml, fillBarHtml, filmWithTypeHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Dashboard, Roll } from "../types";
 
@@ -13,11 +13,9 @@ function rollCardHtml(r: Roll, queued: number): string {
   const count = r.frame_count + queued;
   return `
     <div class="dashboard-card" data-roll="${r.number}" tabindex="0" role="button" aria-label="Film #${r.number} – neue Aufnahme">
-      ${typeBadgeHtml(r.film_stock.type)}
       <div class="dashboard-info">
         <div class="dashboard-kamera">${escapeHtml(r.camera.name)}</div>
-        <div class="dashboard-film">#${r.number} · ${escapeHtml(r.film_stock.name)} ${expiryPillHtml(r.expired_years)}</div>
-        <a class="dashboard-details" href="#film/${r.number}" aria-label="Film #${r.number} Details">Details</a>
+        <div class="dashboard-film">${filmWithTypeHtml(r.film_stock.name, r.film_stock.type)}${expiryPillHtml(r.expired_years)}</div>
       </div>
       <div class="dashboard-right">
         <div class="dashboard-count">${count}${r.capacity ? `<span class="dashboard-max">/${r.capacity}</span>` : ""}</div>
@@ -89,9 +87,9 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
         ? `<div class="dashboard-grid">${d.open_rolls.map((r) => rollCardHtml(r, queued.get(r.number) ?? 0)).join("")}</div>`
         : `<p class="empty-state">Noch kein aktiver Film.</p>`
     }
-    ${developCardHtml(d.to_develop)}
     ${hints ? `<div class="hint-list">${hints}</div>` : ""}
-    ${lastFrameHtml(d)}`;
+    ${lastFrameHtml(d)}
+    ${developCardHtml(d.to_develop)}`;
 
   qsa(top, ".dashboard-card").forEach((card) => {
     const open = () => navigate(`neue-aufnahme/${card.dataset.roll}`);

@@ -7,7 +7,7 @@ import { escapeHtml } from "../lib/escape";
 import { navigate } from "../lib/nav";
 import { listQueue, removeQueued, type QueueItem } from "../lib/queue";
 import { NEXT } from "../lib/rollStatus";
-import { expiryPillHtml, frameMetaHtml, STATUS_LABELS, TYPE_LABELS, typeCornerHtml } from "../lib/ui";
+import { expiryPillHtml, filmWithTypeHtml, frameMetaHtml, STATUS_LABELS, TYPE_LABELS } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Catalog, Frame, RollDetail } from "../types";
 
@@ -257,7 +257,7 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       : "";
 
     let html = `
-      <h1 class="view-title detail-title">${typeCornerHtml(roll.film_stock.type)}#${roll.number} — ${escapeHtml(roll.film_stock.name)}</h1>
+      <h1 class="view-title detail-title">#${roll.number} — ${filmWithTypeHtml(roll.film_stock.name, roll.film_stock.type)}</h1>
       <p class="view-hint">${info} ${expiryPillHtml(roll.expired_years)}</p>
       ${roll.notes ? `<p class="view-hint">${escapeHtml(roll.notes)}</p>` : ""}
       <div class="detail-actions">

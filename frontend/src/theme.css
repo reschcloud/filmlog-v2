@@ -268,25 +268,24 @@
 .theme .dashboard-card:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .theme .dashboard-typ-ecke { display: none; }
 
-/* Typ-Marker: 32 px, konzentrisch zum 16-px-Kartenradius. Der transparente
-   2-px-Ring lässt die Kartenfarbe durch und hält den Marker von der Kante frei. */
+/* Typ-Marker: kleiner Kreis direkt hinter dem Filmnamen; der 1-px-Ring in
+   Textfarbe hält ihn auf hellen wie dunklen Flächen lesbar. */
 .theme .type-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 32px;
-  height: 32px;
-  border: 2px solid transparent;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid currentColor;
   border-radius: 50%;
-  background-clip: padding-box;
-  pointer-events: none;
+  vertical-align: -2px;
+  flex: none;
 }
 .theme .type-badge-sw { background-image: linear-gradient(90deg, var(--ink) 0 50%, var(--paper) 50% 100%); }
 .theme .type-badge-farbe { background-image: conic-gradient(#b23c2a 0 33%, #d9a441 33% 66%, #2a7a6d 66% 100%); }
 .theme .type-badge-dia { background-image: linear-gradient(90deg, #2a4d8f 0 50%, #e8c33a 50% 100%); }
+.theme .type-badge-keep { white-space: nowrap; }
+.theme .detail-title .type-badge { width: 18px; height: 18px; vertical-align: -1px; }
 .theme .dashboard-kamera { color: var(--ink); font-size: var(--large); }
 .theme .dashboard-film { color: var(--ink); font-size: var(--medium); }
-.theme .dashboard-details { color: var(--ink); font-size: var(--medium); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .theme .dashboard-count { color: var(--ink); font-size: 28px; }
 .theme .dashboard-max { color: rgba(26, 22, 17, 0.65); }
 .theme .dashboard-fill-track { background: rgba(26, 22, 17, 0.25); }
@@ -922,7 +921,6 @@
 .theme[data-theme="light"] .develop-card:hover { background: var(--paper-dim); }
 .theme[data-theme="light"] .develop-detail,
 .theme[data-theme="light"] .develop-unit { color: var(--ink-soft); }
-.theme[data-theme="light"] .dashboard-details { color: var(--ink); }
 .theme[data-theme="light"] .dashboard-card .ablauf-pille { background: var(--red-dim); color: var(--paper); }
 .theme[data-theme="light"] .cat-delete { color: var(--red-dim); border-color: var(--red-dim); }
 .theme[data-theme="light"] .cat-delete:hover { background: var(--red-dim); color: var(--paper); }

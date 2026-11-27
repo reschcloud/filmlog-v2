@@ -41,18 +41,22 @@ export const STATUS_LABELS: Record<RollStatus, string> = {
   archiviert: "Archiviert",
 };
 
-export function typeCornerHtml(type: FilmType | string | null | undefined): string {
-  if (type === "sw") return `<div class="dashboard-typ-ecke dashboard-typ-sw"></div>`;
-  if (type === "farbe") return `<div class="dashboard-typ-ecke dashboard-typ-farbe"></div>`;
-  if (type === "dia") return `<div class="dashboard-typ-ecke dashboard-typ-dia"></div>`;
-  return "";
-}
-
-/** Runder Typ-Marker in der Ecke: konzentrisch zum Kartenradius. */
+/** Runder Typ-Marker direkt hinter dem Filmnamen. */
 export function typeBadgeHtml(type: FilmType | string | null | undefined): string {
   if (type !== "sw" && type !== "farbe" && type !== "dia") return "";
   const label = TYPE_LABELS[type];
   return `<span class="type-badge type-badge-${type}" role="img" aria-label="${label}" title="${label}"></span>`;
+}
+
+/** Filmname plus Marker; der Marker bleibt am letzten Wort, auch wenn der Name umbricht. */
+export function filmWithTypeHtml(name: string, type: FilmType | string | null | undefined): string {
+  const badge = typeBadgeHtml(type);
+  if (!badge) return escapeHtml(name);
+  const safe = escapeHtml(name);
+  const cut = safe.lastIndexOf(" ");
+  const head = cut > 0 ? safe.slice(0, cut + 1) : "";
+  const tail = cut > 0 ? safe.slice(cut + 1) : safe;
+  return `${head}<span class="type-badge-keep">${tail}&nbsp;${badge}</span>`;
 }
 
 export function expiryPillHtml(years: number): string {

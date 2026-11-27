@@ -4,7 +4,7 @@ import { qs, setErrorState, setLoading, toast } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { navigate } from "../lib/nav";
 import { NEXT, PREV, STATUS_DATE_LABEL } from "../lib/rollStatus";
-import { expiryPillHtml, STATUS_LABELS, typeCornerHtml } from "../lib/ui";
+import { expiryPillHtml, filmWithTypeHtml, STATUS_LABELS } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Roll, RollStatus } from "../types";
 
@@ -21,9 +21,8 @@ function rowHtml(r: Roll): string {
     : r.created_at;
   return `
     <div class="download-row roll-row download-row-klickbar" data-roll="${r.number}">
-      ${typeCornerHtml(r.film_stock.type)}
       <div class="download-row-info">
-        <div class="download-row-title">#${r.number} — ${escapeHtml(r.film_stock.name)}</div>
+        <div class="download-row-title">#${r.number} — ${filmWithTypeHtml(r.film_stock.name, r.film_stock.type)}</div>
         <div class="download-row-meta">${escapeHtml(r.camera.name)} · ${r.frame_count}${r.capacity ? `/${r.capacity}` : ""} Aufnahmen ${expiryPillHtml(r.expired_years)}</div>
         ${statusDate ? `<div class="download-row-meta">${STATUS_DATE_LABEL[r.status]}: ${formatDate(statusDate)}</div>` : ""}
       </div>

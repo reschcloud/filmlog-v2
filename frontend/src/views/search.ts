@@ -1,7 +1,7 @@
 import { api, errMsg } from "../api";
 import { debounce, qs, setLoading, toast, withBusy } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
-import { expiryPillHtml, frameMetaHtml, STATUS_LABELS, typeCornerHtml } from "../lib/ui";
+import { expiryPillHtml, filmWithTypeHtml, frameMetaHtml, STATUS_LABELS } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { FrameWithRoll, Roll, SearchResult } from "../types";
 
@@ -33,10 +33,9 @@ export function renderSearch(ctx: ViewContext): void {
   function frameHtml(f: FrameWithRoll): string {
     return `
       <a class="eintrag eintrag-zuletzt eintrag-link" href="#film/${f.roll_number}/${f.position}">
-        ${typeCornerHtml(f.roll.type)}
         <div class="eintrag-info">
           <div class="eintrag-motiv">${f.motif ? escapeHtml(f.motif) : "(kein Motiv)"}</div>
-          <div class="eintrag-film">${escapeHtml(f.roll.camera_name)} · #${f.roll_number} · ${escapeHtml(f.roll.film_stock_name)} · Nr. ${f.position}</div>
+          <div class="eintrag-film">${escapeHtml(f.roll.camera_name)} · #${f.roll_number} · ${filmWithTypeHtml(f.roll.film_stock_name, f.roll.type)} · Nr. ${f.position}</div>
           <div class="eintrag-meta">${frameMetaHtml(f)}</div>
         </div>
       </a>`;
@@ -45,9 +44,8 @@ export function renderSearch(ctx: ViewContext): void {
   function rollHtml(r: Roll): string {
     return `
       <a class="eintrag eintrag-zuletzt eintrag-link" href="#film/${r.number}">
-        ${typeCornerHtml(r.film_stock.type)}
         <div class="eintrag-info">
-          <div class="eintrag-film">#${r.number} — ${escapeHtml(r.film_stock.name)} ${expiryPillHtml(r.expired_years)}</div>
+          <div class="eintrag-film">#${r.number} — ${filmWithTypeHtml(r.film_stock.name, r.film_stock.type)} ${expiryPillHtml(r.expired_years)}</div>
           <div class="eintrag-meta">${escapeHtml(r.camera.name)} · ${r.frame_count} Aufnahmen · ${escapeHtml(STATUS_LABELS[r.status])}</div>
           ${r.notes ? `<div class="eintrag-meta">${escapeHtml(r.notes)}</div>` : ""}
         </div>

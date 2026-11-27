@@ -756,16 +756,6 @@ button, .anzahl-btn, .add-btn {
   color: var(--ink-soft);
   margin-top: 2px;
 }
-.dashboard-details {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  min-height: 44px;
-  font-family: var(--font-mono);
-  font-size: var(--small);
-  color: var(--red-dim);
-  text-decoration: underline;
-}
 .dashboard-count {
   font-family: var(--font-display);
   font-weight: 700;

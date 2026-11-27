@@ -2,7 +2,7 @@ import { api, errMsg } from "../api";
 import { optionsHtml, qs, setErrorState, setLoading, toast, withBusy } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { todayStr } from "../lib/dates";
-import { frameMetaHtml, typeCornerHtml } from "../lib/ui";
+import { filmWithTypeHtml, frameMetaHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { FrameWithRoll, RecentFrames, Roll } from "../types";
 
@@ -39,10 +39,9 @@ export async function renderRecent(ctx: ViewContext): Promise<void> {
   function cardHtml(f: FrameWithRoll): string {
     return `
       <a class="eintrag eintrag-zuletzt eintrag-link" href="#film/${f.roll_number}/${f.position}">
-        ${typeCornerHtml(f.roll.type)}
         <div class="eintrag-info">
           <div class="eintrag-motiv">${f.motif ? escapeHtml(f.motif) : "(kein Motiv)"}</div>
-          <div class="eintrag-film">${escapeHtml(f.roll.camera_name)} · #${f.roll_number} · ${escapeHtml(f.roll.film_stock_name)} · Nr. ${f.position}</div>
+          <div class="eintrag-film">${escapeHtml(f.roll.camera_name)} · #${f.roll_number} · ${filmWithTypeHtml(f.roll.film_stock_name, f.roll.type)} · Nr. ${f.position}</div>
           <div class="eintrag-meta">${frameMetaHtml(f)}</div>
         </div>
       </a>`;
