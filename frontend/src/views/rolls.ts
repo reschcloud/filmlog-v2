@@ -28,6 +28,7 @@ function rowHtml(r: Roll): string {
         ${statusDate ? `<div class="download-row-meta">${STATUS_DATE_LABEL[r.status]}: ${formatDate(statusDate)}</div>` : ""}
       </div>
       <div class="roll-actions">
+        ${r.status === "offen" ? `<a class="roll-details" href="#film/${r.number}" aria-label="Film #${r.number} Details">Details</a>` : ""}
         ${prev ? `<button type="button" class="status-btn status-btn-back" data-act="prev" data-roll="${r.number}">↩ ${escapeHtml(prev.label)}</button>` : ""}
         ${next ? `<button type="button" class="status-btn" data-act="next" data-roll="${r.number}">${escapeHtml(next.label)}</button>` : ""}
       </div>
@@ -113,7 +114,10 @@ export async function renderRolls(ctx: ViewContext): Promise<void> {
     }
     if (target.closest("a")) return;
     const row = target.closest<HTMLElement>(".roll-row");
-    if (row) navigate(`film/${row.dataset.roll}`);
+    if (row) {
+      const roll = rolls.find((r) => r.number === Number(row.dataset.roll));
+      if (roll) navigate(roll.status === "offen" ? `neue-aufnahme/${roll.number}` : `film/${roll.number}`);
+    }
   });
 
   await load();

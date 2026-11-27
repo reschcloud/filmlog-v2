@@ -20,11 +20,12 @@ function rollCardHtml(r: Roll, queued: number): string {
   const count = r.frame_count + queued;
   const full = r.is_full || (r.capacity > 0 && count >= r.capacity);
   return `
-    <div class="dashboard-card" data-roll="${r.number}" tabindex="0" role="button">
+    <div class="dashboard-card" data-roll="${r.number}" tabindex="0" role="button" aria-label="Film #${r.number} – neue Aufnahme">
       ${typeCornerHtml(r.film_stock.type)}
       <div class="dashboard-info">
         <div class="dashboard-kamera">${escapeHtml(r.camera.name)}</div>
         <div class="dashboard-film">#${r.number} · ${escapeHtml(r.film_stock.name)} ${expiryPillHtml(r.expired_years)}</div>
+        <a class="dashboard-details" href="#film/${r.number}" aria-label="Film #${r.number} Details">Details</a>
       </div>
       <div class="dashboard-right">
         <div class="dashboard-count">${count}${r.capacity ? `<span class="dashboard-max">/${r.capacity}</span>` : ""}</div>
@@ -120,8 +121,11 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
     ${lastFrameHtml(d)}`;
 
   qsa(top, ".dashboard-card").forEach((card) => {
-    const open = () => navigate(`film/${card.dataset.roll}`);
-    card.addEventListener("click", open);
+    const open = () => navigate(`neue-aufnahme/${card.dataset.roll}`);
+    card.addEventListener("click", (ev) => {
+      if ((ev.target as HTMLElement).closest("a,button")) return;
+      open();
+    });
     card.addEventListener("keydown", (ev) => {
       if ((ev.key === "Enter" || ev.key === " ") && ev.target === card) {
         ev.preventDefault();

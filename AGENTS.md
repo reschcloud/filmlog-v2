@@ -82,6 +82,16 @@ Python-Abhängigkeiten ggf. ebenso in einem `python:3.12-slim`-Container (venv a
 - v1-Daten: `filmlog import-v1 <db.yaml> [optionen.yaml] [--dry-run]` oder Upload in der UI. Der Import ist
   idempotent (überspringt vorhandene Filmnummern) und rollt bei `--dry-run` zurück.
 
+## Architekturentscheidungen (ADRs)
+
+- Grundlegende Entscheidungen liegen als nummerierte ADRs in `docs/adr/` (deutsch, Index in
+  `docs/adr/README.md`). Neue Architektur-, Datenmodell-, Auth-, Offline- oder Field-UI-Grundsatzentscheidungen
+  dort ergänzen und im Index verlinken.
+- ADRs werden nicht umgeschrieben; eine geänderte Entscheidung bekommt eine neue Nummer mit
+  `Ersetzt: ADR-XXXX`.
+- **Kernprozess im Feld:** Ein Tap auf einen offenen Film öffnet immer direkt die Aufnahme; die
+  Detailseite ist eine separate „Details“-Aktion (ADR-0001). Diese Regel nicht ohne neue ADR ändern.
+
 ## Konventionen
 
 - UI-Texte, Fehlermeldungen und Kommentare auf Deutsch; Code-Identifier meist englisch.

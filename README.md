@@ -182,6 +182,7 @@ backend/    FastAPI, SQLAlchemy 2, Alembic, pytest      → backend/filmlog/
 frontend/   Vite + TypeScript, PWA                       → frontend/README.md
 client/     EXIF-Writer
 docs/API.md API-Vertrag
+docs/adr/  Architekturentscheidungen (ADRs)
 ```
 
 ```bash

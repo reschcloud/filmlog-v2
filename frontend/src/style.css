@@ -769,6 +769,16 @@ button, .anzahl-btn, .add-btn {
   color: var(--ink-soft);
   margin-top: 2px;
 }
+.dashboard-details {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-mono);
+  font-size: var(--small);
+  color: var(--red-dim);
+  text-decoration: underline;
+}
 .dashboard-count {
   font-family: var(--font-display);
   font-weight: 700;
@@ -1242,6 +1252,16 @@ a.letzte-aufnahme { color: inherit; display: block; position: relative; }
 /* Rollen-Liste */
 .roll-row { align-items: flex-start; }
 .roll-row .download-row-info { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+.roll-details {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: var(--small);
+  color: var(--red-dim);
+  text-decoration: underline;
+}
 .roll-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; flex: 1 1 100%; }
 .status-btn {
   font-family: var(--font-display); font-size: var(--small); font-weight: 700;
