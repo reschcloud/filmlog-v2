@@ -5,7 +5,7 @@ import { fetchMe } from "./lib/auth";
 import { setErrorState, toast } from "./lib/dom";
 import { EVT_QUEUE, EVT_SYNCED } from "./lib/events";
 import { currentRoute, navigate, setRerender } from "./lib/nav";
-import { flushQueue, queueCount, type FlushResult } from "./lib/queue";
+import { failedFrameCount, flushQueue, queueCount, queuedFrameCount, type FlushResult } from "./lib/queue";
 import type { ViewContext, ViewFn } from "./lib/view";
 import { renderCatalog } from "./views/catalog";
 import { renderDashboard } from "./views/dashboard";
@@ -39,6 +39,7 @@ document.title = `Filmlog v${__APP_VERSION__}`;
 const app = document.getElementById("app") as HTMLElement;
 const backBtn = document.getElementById("backBtn") as HTMLButtonElement;
 const bottomNav = document.getElementById("bottomNav") as HTMLElement;
+const failedBadge = document.getElementById("failedBadge") as HTMLElement;
 
 const NAV_KEY: Record<string, string> = {
   start: "start",
@@ -118,11 +119,16 @@ function enterApp(): void {
 }
 
 async function updateBadge(): Promise<void> {
-  const n = await queueCount();
+  const n = await queuedFrameCount();
+  const failed = await failedFrameCount();
   queueBadge.hidden = n === 0;
   queueBadge.textContent = String(n);
-  queueBadge.title = `${n} offline gespeichert`;
-  queueBadge.setAttribute("aria-label", `${n} offline gespeichert`);
+  queueBadge.title = `${n} Aufnahme(n) offline gespeichert`;
+  queueBadge.setAttribute("aria-label", `${n} Aufnahme(n) offline gespeichert`);
+  failedBadge.hidden = failed === 0;
+  failedBadge.textContent = String(failed);
+  failedBadge.title = `${failed} Aufnahme(n) nicht gesendet – siehe Mehr`;
+  failedBadge.setAttribute("aria-label", `${failed} Aufnahme(n) nicht gesendet`);
 }
 
 async function syncQueue(announce: boolean): Promise<void> {
@@ -162,8 +168,12 @@ window.addEventListener(EVT_SYNCED, (ev) => {
   if (res.sent > 0) {
     toast(`${res.sent} offline gespeicherte Eintragung${res.sent === 1 ? "" : "en"} gesendet.`, "ok");
   }
-  for (const d of res.dropped) {
-    toast(`Offline-Aufnahme „${d.item.label}“ abgelehnt: ${d.message}`, "error", 9000);
+  if (res.dropped.length > 0) {
+    toast(
+      `${res.dropped.length} Aufnahme(n) nicht gesendet: ${res.dropped[0]!.message} – siehe „Mehr“.`,
+      "error",
+      9000,
+    );
   }
   const route = currentRoute().name;
   if (route === "start" || route === "zuletzt") renderRoute();

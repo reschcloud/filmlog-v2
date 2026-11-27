@@ -1,15 +1,27 @@
 import { api, errMsg } from "../api";
 import { getCatalog } from "../lib/data";
 import { nowTimeStr, todayStr } from "../lib/dates";
+import { clearDraft, loadDraft, saveDraft } from "../lib/draft";
 import { optionsHtml, qs, qsa, setErrorState, setLoading, toast, withBusy } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { navigate } from "../lib/nav";
+import { listQueue, removeQueued, type QueueItem } from "../lib/queue";
 import { NEXT } from "../lib/rollStatus";
 import { expiryPillHtml, frameMetaHtml, STATUS_LABELS, TYPE_LABELS, typeCornerHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Catalog, Frame, RollDetail } from "../types";
 
 type Mode = { typ: "edit" | "insert"; position: number } | null;
+
+const FRAME_DRAFT = "filmlog:draft:frame";
+const META_DRAFT = "filmlog:draft:meta";
+
+interface MetaDraft {
+  capacity: string;
+  expiry_year: string;
+  iso_override: string;
+  notes: string;
+}
 
 interface FormValues {
   motif?: string | null;
@@ -52,8 +64,19 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
   }
   if (!ctx.alive()) return;
 
+  let pendingItems: QueueItem[] = [];
+  try {
+    pendingItems = (await listQueue()).filter((i) => i.roll_number === number);
+  } catch {
+    pendingItems = [];
+  }
+  if (!ctx.alive()) return;
+
   let mode: Mode = null;
   let metaOpen = false;
+  let formDirty = false;
+  let metaDirty = false;
+  let activeDraftKey: string | null = null;
   let scrollTo: { position: number; center: boolean } | null = null;
 
   const wanted = parseInt(ctx.params[1] ?? "", 10);
@@ -66,8 +89,12 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
   const readOnly = (): boolean => roll.status === "archiviert";
 
   async function reload(): Promise<void> {
+    const y = window.scrollY;
     roll = await api.get<RollDetail>(`/api/v2/rolls/${number}`);
-    if (ctx.alive()) paint();
+    if (ctx.alive()) {
+      paint();
+      window.scrollTo(0, y);
+    }
   }
 
   function lensOptions(selectedId: number | null | undefined, currentName: string | null | undefined): string {
@@ -207,6 +234,28 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       .map(escapeHtml)
       .join(" · ");
 
+    const pendingHtml = pendingItems.length
+      ? (() => {
+          const pendingCount = pendingItems.reduce((sum, i) => sum + (i.payload.count ?? 1), 0);
+          return `
+            <p class="dashboard-label">Wird gesendet (${pendingCount})</p>
+            <div class="eintraege-liste">
+              ${pendingItems
+                .map(
+                  (i) => `<div class="eintrag eintrag-pending">
+                    <div class="eintrag-nr">•</div>
+                    <div class="eintrag-info">
+                      <div class="eintrag-motiv">${escapeHtml(i.label)}</div>
+                      <div class="eintrag-meta">${i.payload.count ?? 1} Aufnahme(n) · wartet auf Übertragung</div>
+                    </div>
+                    <button type="button" class="eintrag-del-btn" data-pending="${escapeHtml(i.client_id)}" title="Nicht gesendete Aufnahme verwerfen" aria-label="Nicht gesendete Aufnahme verwerfen">🗑️</button>
+                  </div>`,
+                )
+                .join("")}
+            </div>`;
+        })()
+      : "";
+
     let html = `
       <a class="detail-zurueck" href="#filme">‹ Filme</a>
       <h1 class="view-title detail-title">${typeCornerHtml(roll.film_stock.type)}#${roll.number} — ${escapeHtml(roll.film_stock.name)}</h1>
@@ -221,6 +270,7 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       </div>
       ${readOnly() ? `<p class="offline-note">Archivierte Filme sind nur lesbar.</p>` : ""}
       ${metaOpen && !readOnly() ? metaFormHtml() : ""}
+      ${pendingHtml}
       <div class="eintraege-liste detail-liste">`;
 
     if (readOnly()) {
@@ -241,6 +291,16 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
   }
 
   function bind(): void {
+    activeDraftKey = null;
+    const canSwitch = (): boolean => {
+      if (!formDirty) return true;
+      if (!confirm("Nicht gespeicherte Änderungen verwerfen?")) return false;
+      if (activeDraftKey) clearDraft(activeDraftKey);
+      formDirty = false;
+      activeDraftKey = null;
+      return true;
+    };
+
     const statusBtn = el.querySelector<HTMLButtonElement>("[data-act=status]");
     if (statusBtn) {
       statusBtn.onclick = async () => {
@@ -274,16 +334,42 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       };
     }
 
+    const metaKey = `${META_DRAFT}:${number}`;
     const metaBtn = el.querySelector<HTMLButtonElement>("[data-act=meta]");
     if (metaBtn) {
       metaBtn.onclick = () => {
+        if (metaOpen && metaDirty && !confirm("Nicht gespeicherte Filmangaben verwerfen?")) return;
+        if (metaOpen) clearDraft(metaKey);
+        metaDirty = false;
         metaOpen = !metaOpen;
         paint();
       };
     }
     const metaForm = el.querySelector<HTMLFormElement>("#metaForm");
     if (metaForm) {
+      const metaDraft = loadDraft<MetaDraft>(metaKey);
+      if (metaDraft) {
+        (metaForm.elements.namedItem("capacity") as HTMLInputElement).value = metaDraft.capacity;
+        (metaForm.elements.namedItem("expiry_year") as HTMLInputElement).value = metaDraft.expiry_year;
+        (metaForm.elements.namedItem("iso_override") as HTMLInputElement).value = metaDraft.iso_override;
+        (metaForm.elements.namedItem("notes") as HTMLTextAreaElement).value = metaDraft.notes;
+        metaDirty = true;
+      }
+      const saveMetaDraft = () => {
+        metaDirty = true;
+        const f = metaForm.elements;
+        saveDraft<MetaDraft>(metaKey, {
+          capacity: (f.namedItem("capacity") as HTMLInputElement).value,
+          expiry_year: (f.namedItem("expiry_year") as HTMLInputElement).value,
+          iso_override: (f.namedItem("iso_override") as HTMLInputElement).value,
+          notes: (f.namedItem("notes") as HTMLTextAreaElement).value,
+        });
+      };
+      metaForm.addEventListener("input", saveMetaDraft);
+      metaForm.addEventListener("change", saveMetaDraft);
       qs(metaForm, "[data-act=meta-cancel]").onclick = () => {
+        clearDraft(metaKey);
+        metaDirty = false;
         metaOpen = false;
         paint();
       };
@@ -299,6 +385,8 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
         await withBusy(qs<HTMLButtonElement>(metaForm, "[type=submit]"), async () => {
           try {
             await api.patch(`/api/v2/rolls/${number}`, body);
+            clearDraft(metaKey);
+            metaDirty = false;
             metaOpen = false;
             toast("Film gespeichert.", "ok");
             await reload();
@@ -312,16 +400,37 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
 
     qsa<HTMLButtonElement>(el, "button[data-act=insert]").forEach((b) => {
       b.onclick = () => {
+        if (!canSwitch()) return;
         mode = { typ: "insert", position: Number(b.dataset.pos) };
         paint();
       };
     });
     qsa<HTMLButtonElement>(el, "button[data-act=edit]").forEach((b) => {
       b.onclick = () => {
+        if (!canSwitch()) return;
         mode = { typ: "edit", position: Number(b.dataset.pos) };
         paint();
       };
     });
+    qsa<HTMLButtonElement>(el, "button[data-pending]").forEach((b) => {
+      b.onclick = async () => {
+        const id = b.dataset.pending;
+        if (!id) return;
+        if (!confirm("Nicht gesendete Aufnahme wirklich verwerfen?")) return;
+        await withBusy(b, async () => {
+          try {
+            await removeQueued(id);
+            pendingItems = pendingItems.filter((i) => i.client_id !== id);
+            const y = window.scrollY;
+            paint();
+            window.scrollTo(0, y);
+          } catch (e) {
+            toast(errMsg(e), "error");
+          }
+        });
+      };
+    });
+
     qsa<HTMLButtonElement>(el, "button[data-act=del]").forEach((b) => {
       b.onclick = async () => {
         const pos = Number(b.dataset.pos);
@@ -354,10 +463,43 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
   function bindFrameForm(form: HTMLFormElement): void {
     const pos = Number(form.dataset.pos);
     const typ = form.dataset.typ as "edit" | "insert";
+    const draftKey = `${FRAME_DRAFT}:${number}:${typ}:${pos}`;
+    activeDraftKey = draftKey;
     fillForm(form, typ === "edit" ? (roll.frames[pos - 1] ?? {}) : insertTemplate(pos));
+    const draft = loadDraft<FormValues>(draftKey);
+    if (draft) {
+      fillForm(form, draft);
+      formDirty = true;
+    }
     if (!scrollTo) form.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
+    const collect = (): FormValues => {
+      const f = form.elements;
+      const val = (n: string) => (f.namedItem(n) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value;
+      const lens = f.namedItem("lens") as HTMLSelectElement;
+      return {
+        motif: val("motif"),
+        lens_id: intOrNull(val("lens")),
+        lens_name: lens.selectedOptions[0]?.textContent ?? null,
+        flash: (f.namedItem("flash") as HTMLInputElement).checked,
+        shutter: val("shutter") || null,
+        aperture: val("aperture") || null,
+        date: val("date"),
+        time: val("time"),
+        location_text: val("location_text"),
+      };
+    };
+    const persistDraft = () => {
+      formDirty = true;
+      saveDraft(draftKey, collect());
+    };
+    form.addEventListener("input", persistDraft);
+    form.addEventListener("change", persistDraft);
+
     qs(form, "[data-act=cancel]").onclick = () => {
+      clearDraft(draftKey);
+      formDirty = false;
+      activeDraftKey = null;
       mode = null;
       paint();
     };
@@ -390,6 +532,9 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
             if (aperture) body.aperture = aperture;
             await api.post(`/api/v2/rolls/${number}/frames`, body);
           }
+          clearDraft(draftKey);
+          formDirty = false;
+          activeDraftKey = null;
           mode = null;
           await reload();
         } catch (e) {

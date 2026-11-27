@@ -229,14 +229,14 @@ export function renderSettings(ctx: ViewContext): void {
     ev.preventDefault();
     await withBusy(dryBtn, async () => {
       try {
-        const report = await api.postForm<ImportReport>("/api/v2/import/v1", buildForm(true));
+        const report = await api.postForm<ImportReport>("/api/v2/import/v1", buildForm(true), { timeoutMs: 120000 });
         importResult.innerHTML = `${reportHtml(report)}<button type="button" class="btn-primary btn-danger" id="doImport">Jetzt importieren</button>`;
         const go = qs<HTMLButtonElement>(importResult, "#doImport");
         go.onclick = async () => {
           if (!confirm("Daten jetzt wirklich importieren?")) return;
           await withBusy([go, dryBtn], async () => {
             try {
-              const done = await api.postForm<ImportReport>("/api/v2/import/v1", buildForm(false));
+              const done = await api.postForm<ImportReport>("/api/v2/import/v1", buildForm(false), { timeoutMs: 180000 });
               cacheClear();
               importResult.innerHTML = reportHtml(done);
               toast("Import abgeschlossen.", "ok");

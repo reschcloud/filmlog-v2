@@ -3,7 +3,9 @@ import type { CreateFramePayload, Frame } from "../types";
 import { EVT_QUEUE, EVT_SYNCED, emit } from "./events";
 
 const DB_NAME = "filmlog";
+const DB_VERSION = 2;
 const STORE = "queue";
+const FAILED = "failed";
 
 export interface QueueItem {
   client_id: string;
@@ -11,6 +13,11 @@ export interface QueueItem {
   payload: CreateFramePayload;
   label: string;
   created: number;
+}
+
+export interface FailedItem extends QueueItem {
+  message: string;
+  failed_at: number;
 }
 
 export interface FlushResult {
@@ -25,26 +32,31 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 function openDb(): Promise<IDBDatabase> {
   if (!dbPromise) {
     dbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = () => {
         const db = req.result;
         if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "client_id" });
+        if (!db.objectStoreNames.contains(FAILED)) db.createObjectStore(FAILED, { keyPath: "client_id" });
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => {
         dbPromise = null;
         reject(req.error ?? new Error("IndexedDB nicht verfügbar"));
       };
+      req.onblocked = () => {
+        dbPromise = null;
+        reject(new Error("IndexedDB-Upgrade blockiert – App neu laden"));
+      };
     });
   }
   return dbPromise;
 }
 
-async function run<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+async function run<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest<T>, storeName = STORE): Promise<T> {
   const db = await openDb();
   return new Promise<T>((resolve, reject) => {
-    const tx = db.transaction(STORE, mode);
-    const req = fn(tx.objectStore(STORE));
+    const tx = db.transaction(storeName, mode);
+    const req = fn(tx.objectStore(storeName));
     tx.oncomplete = () => resolve(req.result);
     tx.onerror = () => reject(tx.error ?? new Error("IndexedDB-Fehler"));
     tx.onabort = () => reject(tx.error ?? new Error("IndexedDB abgebrochen"));
@@ -68,8 +80,47 @@ export async function queueCount(): Promise<number> {
   }
 }
 
+/** Anzahl wartender Aufnahmen (nicht Queue-Einträge). */
+export async function queuedFrameCount(): Promise<number> {
+  return (await listQueue()).reduce((n, it) => n + (it.payload.count ?? 1), 0);
+}
+
+export async function listFailed(): Promise<FailedItem[]> {
+  try {
+    const items = await run<FailedItem[]>("readonly", (s) => s.getAll() as IDBRequest<FailedItem[]>, FAILED);
+    return items.sort((a, b) => a.created - b.created);
+  } catch {
+    return [];
+  }
+}
+
+/** Anzahl dauerhaft abgelehnter Aufnahmen, die auf eine Entscheidung warten. */
+export async function failedFrameCount(): Promise<number> {
+  return (await listFailed()).reduce((n, it) => n + (it.payload.count ?? 1), 0);
+}
+
+export async function retryFailed(clientId: string): Promise<void> {
+  const item = (await listFailed()).find((i) => i.client_id === clientId);
+  if (!item) return;
+  const queueItem: QueueItem = {
+    client_id: item.client_id,
+    roll_number: item.roll_number,
+    payload: item.payload,
+    label: item.label,
+    created: item.created,
+  };
+  await run("readwrite", (s) => s.put(queueItem));
+  await run("readwrite", (s) => s.delete(clientId), FAILED);
+  await notify();
+}
+
+export async function discardFailed(clientId: string): Promise<void> {
+  await run("readwrite", (s) => s.delete(clientId), FAILED);
+  await notify();
+}
+
 async function notify(): Promise<void> {
-  emit(EVT_QUEUE, await queueCount());
+  emit(EVT_QUEUE, await queuedFrameCount());
 }
 
 export async function enqueue(payload: CreateFramePayload, rollNumber: number, label: string): Promise<void> {
@@ -92,7 +143,14 @@ async function removeItem(clientId: string): Promise<void> {
 /** Eine noch nicht gesendete Aufnahme verwerfen (Undo nach Offline-Speichern). */
 export async function removeQueued(clientId: string): Promise<void> {
   await removeItem(clientId);
+  await run("readwrite", (s) => s.delete(clientId), FAILED);
   await notify();
+}
+
+async function moveToFailed(item: QueueItem, message: string): Promise<void> {
+  const failed: FailedItem = { ...item, message, failed_at: Date.now() };
+  await run("readwrite", (s) => s.put(failed), FAILED);
+  await removeItem(item.client_id);
 }
 
 /** Anzahl wartender Aufnahmen je Film (inkl. count). */
@@ -128,7 +186,8 @@ async function doFlush(): Promise<FlushResult> {
         e.status !== 408 &&
         e.status !== 429
       ) {
-        await removeItem(item.client_id);
+        // Nicht endgültig löschen: sichtbar parken, damit im Feld nichts verloren geht.
+        await moveToFailed(item, e.message);
         result.dropped.push({ item, message: e.message });
       } else {
         // Netz weg, 5xx, 401 o. Ä.: behalten und später erneut versuchen

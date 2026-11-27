@@ -1,6 +1,7 @@
 import { api, errMsg, isOfflineError } from "../api";
 import { getCatalog, getDashboard, getFrameSuggestion } from "../lib/data";
 import { nowIsoLocal, nowTimeStr, todayStr } from "../lib/dates";
+import { clearDraft, loadDraft, saveDraft } from "../lib/draft";
 import { debounce, optionsHtml, qs, qsa, showError, toast, withBusy, type ToastAction } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { uuid } from "../lib/ids";
@@ -10,6 +11,20 @@ import type { ViewContext } from "../lib/view";
 import type { Catalog, CreateFramePayload, Dashboard, Frame, FrameSuggestion, PlaceSuggestion } from "../types";
 
 const ALL_LENSES = "__all__";
+const DRAFT_KEY = "filmlog:draft:newFrame";
+
+interface FrameDraft {
+  roll: string;
+  motif: string;
+  lens: string;
+  flash: boolean;
+  shutter: string;
+  aperture: string;
+  place: string;
+  date: string;
+  time: string;
+  count: string;
+}
 
 export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const { el } = ctx;
@@ -157,7 +172,19 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   };
 
   const wanted = ctx.params[0];
-  if (wanted && dash.open_rolls.some((r) => String(r.number) === wanted)) rollSel.value = wanted;
+  const wantedRoll = wanted && dash.open_rolls.some((r) => String(r.number) === wanted) ? wanted : "";
+  if (wantedRoll) rollSel.value = wantedRoll;
+  const savedDraft = loadDraft<FrameDraft>(DRAFT_KEY);
+  if (savedDraft && !dash.open_rolls.some((r) => String(r.number) === savedDraft.roll)) {
+    clearDraft(DRAFT_KEY);
+  }
+  const draft =
+    savedDraft &&
+    dash.open_rolls.some((r) => String(r.number) === savedDraft.roll) &&
+    (!wantedRoll || wantedRoll === savedDraft.roll)
+      ? savedDraft
+      : null;
+  if (draft) rollSel.value = draft.roll;
   updateRollMeta();
 
   // ---- Datum / Uhrzeit ----
@@ -167,6 +194,14 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     timeInput.value = nowTimeStr();
   };
   setNow();
+  if (draft?.date) {
+    dateInput.value = draft.date;
+    dtTouched = true;
+  }
+  if (draft?.time) {
+    timeInput.value = draft.time;
+    dtTouched = true;
+  }
   dateInput.addEventListener("input", () => (dtTouched = true));
   timeInput.addEventListener("input", () => (dtTouched = true));
   qs(el, "#nowBtn").onclick = () => {
@@ -196,6 +231,13 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   qs(el, "#countPlus").onclick = () => stepCount(1);
   countInput.addEventListener("input", updateSaveLabel);
   updateSaveLabel();
+  if (draft?.count) {
+    const n = parseInt(draft.count, 10);
+    if (Number.isFinite(n)) {
+      countInput.value = String(Math.min(50, Math.max(1, n)));
+      updateSaveLabel();
+    }
+  }
 
   // ---- Auswahllisten ----
   const lensesActive = catalog.lenses.filter((l) => !l.archived);
@@ -280,6 +322,17 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   fillLenses(null);
   fillSelect(shutterSel, shutterLabels, null);
   fillSelect(apertureSel, apertureLabels, null);
+  if (draft) {
+    if (draft.lens) lensSel.value = draft.lens;
+    if (draft.shutter) shutterSel.value = draft.shutter;
+    if (draft.aperture) apertureSel.value = draft.aperture;
+    motif.value = draft.motif;
+    flashChk.checked = draft.flash;
+    placeInput.value = draft.place;
+    lensTouched = true;
+    shutterTouched = true;
+    apertureTouched = true;
+  }
   rollSel.onchange = () => {
     lensTouched = false;
     shutterTouched = false;
@@ -439,6 +492,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         updateMotifRecent();
         countInput.value = "1";
         updateSaveLabel();
+        clearDraft(DRAFT_KEY);
         motif.focus();
       }
       updateRollMeta();
@@ -511,6 +565,23 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
 
   doneBtn.onclick = () => {
     const roll = Number(rollSel.value);
+    clearDraft(DRAFT_KEY);
     if (roll) navigate(`film/${roll}`);
   };
+
+  const draftData = (): FrameDraft => ({
+    roll: rollSel.value,
+    motif: motif.value,
+    lens: lensSel.value,
+    flash: flashChk.checked,
+    shutter: shutterSel.value,
+    aperture: apertureSel.value,
+    place: placeInput.value,
+    date: dateInput.value,
+    time: timeInput.value,
+    count: countInput.value,
+  });
+  const persistDraft = () => saveDraft(DRAFT_KEY, draftData());
+  form.addEventListener("input", persistDraft);
+  form.addEventListener("change", persistDraft);
 }

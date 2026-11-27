@@ -18,6 +18,8 @@ export interface RequestOptions {
   timeoutMs?: number;
 }
 
+const DEFAULT_TIMEOUT_MS = 20_000;
+
 let unauthorizedHandler: (() => void) | null = null;
 
 export function setUnauthorizedHandler(fn: () => void): void {
@@ -55,22 +57,23 @@ async function request<T>(
     init.body = JSON.stringify(body);
   }
 
-  let timer: number | undefined;
-  if (opts.timeoutMs) {
-    const ctrl = new AbortController();
-    init.signal = ctrl.signal;
-    timer = window.setTimeout(() => ctrl.abort(), opts.timeoutMs);
-  }
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const ctrl = new AbortController();
+  init.signal = ctrl.signal;
+  const timer = window.setTimeout(() => ctrl.abort(), timeoutMs);
 
   let res: Response;
   let text: string;
   try {
     res = await fetch(path, init);
     text = await res.text();
-  } catch {
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new NetworkError("Zeitüberschreitung – bitte erneut versuchen.");
+    }
     throw new NetworkError();
   } finally {
-    if (timer !== undefined) window.clearTimeout(timer);
+    window.clearTimeout(timer);
   }
 
   let data: unknown = null;
@@ -92,7 +95,7 @@ async function request<T>(
 export const api = {
   get: <T>(path: string, opts?: RequestOptions) => request<T>("GET", path, undefined, opts),
   post: <T>(path: string, body?: unknown, opts?: RequestOptions) => request<T>("POST", path, body ?? {}, opts),
-  postForm: <T>(path: string, form: FormData) => request<T>("POST", path, form),
+  postForm: <T>(path: string, form: FormData, opts?: RequestOptions) => request<T>("POST", path, form, opts),
   patch: <T>(path: string, body: unknown) => request<T>("PATCH", path, body),
   del: <T>(path: string) => request<T>("DELETE", path),
 };
