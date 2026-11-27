@@ -5,7 +5,6 @@ import { clearDraft, loadDraft, saveDraft } from "../lib/draft";
 import { debounce, optionsHtml, qs, qsa, showError, toast, withBusy, type ToastAction } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { uuid } from "../lib/ids";
-import { navigate } from "../lib/nav";
 import { enqueue, flushQueue, queueCount, queuedFramesByRoll, removeQueued } from "../lib/queue";
 import { locationHtml, pinIconHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
@@ -139,7 +138,6 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
               <input type="number" name="count" id="countInput" min="1" max="50" step="1" value="1" aria-label="Anzahl Aufnahmen">
               <button type="button" class="anzahl-btn" id="countPlus" aria-label="Mehr">+</button>
             </div>
-            <button type="button" class="save-done" id="doneBtn">Fertig</button>
           </div>
           <p class="field-note save-full" id="fullNote" hidden></p>
           <button type="submit" class="btn-primary" id="saveBtn">Aufnahme speichern</button>
@@ -164,7 +162,6 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const countInput = qs<HTMLInputElement>(el, "#countInput");
   const rollCount = qs(el, "#rollCount");
   const fullNote = qs(el, "#fullNote");
-  const doneBtn = qs<HTMLButtonElement>(el, "#doneBtn");
   const whenText = qs(el, "#whenText");
   const whenEdit = qs<HTMLButtonElement>(el, "#whenEdit");
   const frameDetails = qs<HTMLDetailsElement>(el, "#frameDetails");
@@ -617,12 +614,6 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         }
       }
     });
-  };
-
-  doneBtn.onclick = () => {
-    const roll = Number(rollSel.value);
-    clearDraft(DRAFT_KEY);
-    if (roll) navigate(`film/${roll}`);
   };
 
   const draftData = (): FrameDraft => ({

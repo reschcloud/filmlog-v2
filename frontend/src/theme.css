@@ -720,7 +720,6 @@
 }
 .theme .save-bar-inner { max-width: 800px; padding: 12px 20px calc(12px + env(safe-area-inset-bottom)); }
 .theme .save-count { font-family: var(--font-display); font-size: var(--large); color: var(--ink); }
-.theme .save-done { font-size: var(--medium); color: var(--ink-soft); text-transform: none; letter-spacing: 0; }
 .theme .save-full { color: var(--red-dim); }
 .theme .frame-form { padding-bottom: 24px; margin-bottom: 160px; }
 .theme .anzahl-stepper input[type="number"] { min-height: 52px; font-size: var(--medium); }
