@@ -69,7 +69,7 @@ export function renderSettings(ctx: ViewContext): void {
         <button type="submit" class="btn-primary">Anlegen</button>
       </form>
       <div id="tokenNew"></div>
-      <a class="btn-link" href="/client/download" download>💻 EXIF-Client herunterladen</a>
+      <a class="btn-link" href="/client/download" download>EXIF-Client herunterladen</a>
     </div>
 
     <p class="dashboard-label">Import aus Filmlog v1</p>
@@ -83,8 +83,8 @@ export function renderSettings(ctx: ViewContext): void {
 
     <p class="dashboard-label">Export &amp; Backup</p>
     <div class="card">
-      <a class="btn-link" href="/api/v2/export.json" download>📄 Export als JSON</a>
-      <a class="btn-link" href="/api/v2/backup.sqlite" download>🗄️ Backup (SQLite)</a>
+      <a class="btn-link" href="/api/v2/export.json" download>Export als JSON</a>
+      <a class="btn-link" href="/api/v2/backup.sqlite" download>Backup (SQLite)</a>
     </div>
 
     <p class="dashboard-label">Konto</p>

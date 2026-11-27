@@ -1,4 +1,5 @@
 import "./style.css";
+import "./theme.css";
 import { registerSW } from "virtual:pwa-register";
 import { setUnauthorizedHandler } from "./api";
 import { fetchMe } from "./lib/auth";

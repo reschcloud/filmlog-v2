@@ -7,6 +7,7 @@ import { escapeHtml } from "../lib/escape";
 import { uuid } from "../lib/ids";
 import { navigate } from "../lib/nav";
 import { enqueue, flushQueue, queueCount, queuedFramesByRoll, removeQueued } from "../lib/queue";
+import { locationHtml, pinIconHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Catalog, CreateFramePayload, Dashboard, Frame, FrameSuggestion, PlaceSuggestion } from "../types";
 
@@ -62,20 +63,22 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
           ${dash.open_rolls
             .map((r) => {
               const n = r.frame_count + (queued.get(r.number) ?? 0);
-              return `<option value="${r.number}">${escapeHtml(r.camera.name)} · ${escapeHtml(r.film_stock.name)} #${r.number} (${n}/${r.capacity})</option>`;
+              return `<option value="${r.number}">#${r.number} · ${escapeHtml(r.film_stock.name)} · ${n}/${r.capacity}</option>`;
             })
             .join("")}
         </select>
       </label>
 
-      <label>Motivbeschreibung
-        <div class="motiv-row">
-          <textarea name="motif" id="motifInput" rows="1" placeholder="Was ist auf dem Bild zu sehen?"></textarea>
-          <button type="button" class="now-btn" id="motifClear" title="Motivbeschreibung leeren" aria-label="Motivbeschreibung leeren">✕</button>
-        </div>
-      </label>
-      <!-- Außerhalb des <label>: Klicks auf die Vorschläge dürfen das Textfeld nicht fokussieren. -->
-      <div class="suggest-list" id="motifSuggest" hidden></div>
+      <div class="motif-field">
+        <label>Motivbeschreibung
+          <div class="motiv-row">
+            <textarea name="motif" id="motifInput" rows="1" placeholder="z. B. Teich"></textarea>
+            <button type="button" class="now-btn" id="motifClear" title="Motivbeschreibung leeren" aria-label="Motivbeschreibung leeren">Leeren</button>
+          </div>
+        </label>
+        <!-- Außerhalb des <label>: Klicks auf die Vorschläge dürfen das Textfeld nicht fokussieren. -->
+        <div class="suggest-list" id="motifSuggest" hidden></div>
+      </div>
       <div class="chip-row motif-recent" id="motifRecent" hidden></div>
 
       <p class="capture-when">
@@ -167,6 +170,8 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const frameDetails = qs<HTMLDetailsElement>(el, "#frameDetails");
   const detailsSummary = qs(el, "#detailsSummary");
   const submits = qsa<HTMLButtonElement>(form, "button[type=submit]");
+  let lat: number | null = null;
+  let lon: number | null = null;
 
   const updateWhen = () => {
     whenText.textContent =
@@ -175,11 +180,14 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         : "Datum/Uhrzeit fehlen";
   };
   const updateDetailsSummary = () => {
-    const lens = lensSel.value ? (lensSel.selectedOptions[0]?.textContent ?? "Objektiv") : "kein Objektiv";
-    const parts = [lens, shutterSel.value || "Zeit offen", apertureSel.value || "Blende offen"];
+    const parts: string[] = [];
+    if (lensSel.value) parts.push(escapeHtml(lensSel.selectedOptions[0]?.textContent ?? "Objektiv"));
+    if (shutterSel.value) parts.push(escapeHtml(shutterSel.value));
+    if (apertureSel.value) parts.push(escapeHtml(apertureSel.value));
     if (flashChk.checked) parts.push("Blitz");
-    if (placeInput.value.trim()) parts.push(placeInput.value.trim());
-    detailsSummary.textContent = `Details · ${parts.join(" · ")}`;
+    const place = locationHtml(placeInput.value, lat, lon);
+    if (place) parts.push(place);
+    detailsSummary.innerHTML = parts.length ? `Details · ${parts.join(" · ")}` : "Details";
   };
   whenEdit.onclick = () => {
     frameDetails.open = true;
@@ -199,7 +207,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     fullNote.textContent = cap && n >= cap ? `Film voll (${n}/${cap}) – weitere Aufnahmen zählen als Bonus.` : "";
     const opt = rollSel.selectedOptions[0];
     if (opt && r) {
-      opt.textContent = `${r.camera.name} · ${r.film_stock.name} #${r.number} (${n}/${cap})${cap && n >= cap ? " · voll" : ""}`;
+      opt.textContent = `#${r.number} · ${r.film_stock.name} · ${n}/${cap}${cap && n >= cap ? " · voll" : ""}`;
     }
   };
 
@@ -253,6 +261,14 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
 
   // ---- Anzahl ----
   const saveBtn = qs<HTMLButtonElement>(el, "#saveBtn");
+  let lastSubmit = 0;
+  // Solange die Motivvorschläge offen sind, darf der erste Tap nicht im Blur verloren gehen.
+  saveBtn.addEventListener("pointerdown", (ev) => {
+    if (motifSuggest.hidden) return;
+    ev.preventDefault();
+    motifSuggest.hidden = true;
+    form.requestSubmit();
+  });
   const updateSaveLabel = () => {
     const n = Math.min(50, Math.max(1, parseInt(countInput.value, 10) || 1));
     saveBtn.textContent = n === 1 ? "Aufnahme speichern" : `${n} Aufnahmen speichern`;
@@ -313,7 +329,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     sel.innerHTML = optionsHtml(
       withCurrent(labels, selected).map((l) => ({ value: l, label: l })),
       selected ?? "",
-      "– keine Angabe –",
+      "keine",
     );
   }
   const shutterLabels = catalog.shutter_speeds.map((s) => s.label);
@@ -432,8 +448,6 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   });
 
   // ---- Ort / GPS ----
-  let lat: number | null = null;
-  let lon: number | null = null;
   let autoPlace = "";
   const setPlace = (text: string, auto: boolean) => {
     placeInput.value = text;
@@ -456,11 +470,9 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
       const first = places[0];
       if (first && first.distance_m <= 50 && (!placeInput.value || placeInput.value === autoPlace)) {
         setPlace(first.location_text, true);
-      } else if (!first && !placeInput.value && lat !== null && lon !== null) {
-        setPlace(`${lat.toFixed(5)}, ${lon.toFixed(5)}`, true);
       }
     } catch {
-      if (!placeInput.value && lat !== null && lon !== null) setPlace(`${lat.toFixed(5)}, ${lon.toFixed(5)}`, true);
+      // Kein Ortsname gefunden: Der Pin im Details-Text zeigt die vorhandene Position.
     }
   }
   placeChips.addEventListener("click", (ev) => {
@@ -477,7 +489,8 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         if (!ctx.alive()) return;
         lat = pos.coords.latitude;
         lon = pos.coords.longitude;
-        gpsStatus.textContent = `GPS: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        gpsStatus.innerHTML = `${pinIconHtml()} Standort gefunden`;
+        updateDetailsSummary();
         void loadPlaces();
       },
       () => {
@@ -498,6 +511,9 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
       frameDetails.open = true;
       return showError(form, "Bitte Datum und Uhrzeit angeben.");
     }
+    const now = Date.now();
+    if (now - lastSubmit < 500) return;
+    lastSubmit = now;
     const count = Math.min(50, Math.max(1, parseInt(countInput.value, 10) || 1));
     const submittedAt = nowIsoLocal();
     const payload: CreateFramePayload = {

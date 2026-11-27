@@ -114,11 +114,12 @@ export async function renderStats(ctx: ViewContext): Promise<void> {
   const { el } = ctx;
   el.innerHTML = `
     <h1 class="view-title">Stats</h1>
-    <p class="view-hint">Aufnahmen zählen nach Aufnahmedatum, Filme nach Anlegedatum.</p>
-    <div class="stats-tabs filter-sticky">
-      <button type="button" class="stats-tab" data-range="30">30 Tage</button>
-      <button type="button" class="stats-tab" data-range="365">365 Tage</button>
-      <button type="button" class="stats-tab" data-range="alle">Alles</button>
+    <div class="stats-filter filter-sticky">
+      <div class="segmented stats-tabs">
+        <button type="button" class="stats-tab" data-range="30">30 Tage</button>
+        <button type="button" class="stats-tab" data-range="365">365 Tage</button>
+        <button type="button" class="stats-tab" data-range="alle">Alles</button>
+      </div>
     </div>
     <div id="statsContent"></div>`;
   const content = qs(el, "#statsContent");

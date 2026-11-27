@@ -111,7 +111,7 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
     return optionsHtml(
       list.map((l) => ({ value: l, label: l })),
       selected ?? "",
-      "– keine Angabe –",
+      "keine",
     );
   }
 
@@ -127,11 +127,6 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
           <div class="eintrag-motiv">${f.motif ? escapeHtml(f.motif) : "(kein Motiv)"}</div>
           <div class="eintrag-meta">${frameMetaHtml(f)}</div>
         </div>
-        ${
-          editable
-            ? `<button type="button" class="eintrag-insert-btn" data-act="insert" data-pos="${pos + 1}" title="Danach einfügen" aria-label="Nach Aufnahme ${pos} einfügen">+</button>`
-            : ""
-        }
       </div>`;
   }
 
@@ -141,7 +136,7 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       <form class="card eintrag-form" data-typ="${typ}" data-pos="${pos}">
         <div class="eintrag-form-titel">${title}</div>
         <label>Motivbeschreibung
-          <textarea name="motif" rows="2" placeholder="Was ist auf dem Bild zu sehen?"></textarea>
+          <textarea name="motif" rows="2" placeholder="z. B. Teich"></textarea>
         </label>
         <div class="field-row field-row-objektiv">
           <label>Objektiv <select name="lens"></select></label>
@@ -162,7 +157,15 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
           <button type="submit" class="btn-primary">Speichern</button>
           <button type="button" class="eintrag-abbrechen-btn" data-act="cancel">Abbrechen</button>
         </div>
-        ${typ === "edit" ? `<button type="button" class="eintrag-delete-btn" data-act="del-form">Aufnahme löschen</button>` : ""}
+        ${
+          typ === "edit"
+            ? `<div class="eintrag-zusatz-aktionen">
+                 <button type="button" class="eintrag-zusatz-btn" data-act="insert-before">Davor einfügen</button>
+                 <button type="button" class="eintrag-zusatz-btn" data-act="insert-after">Danach einfügen</button>
+               </div>
+               <button type="button" class="eintrag-delete-btn" data-act="del-form">Aufnahme löschen</button>`
+            : ""
+        }
       </form>`;
   }
 
@@ -245,7 +248,7 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
                       <div class="eintrag-motiv">${escapeHtml(i.label)}</div>
                       <div class="eintrag-meta">${i.payload.count ?? 1} Aufnahme(n) · wartet auf Übertragung</div>
                     </div>
-                    <button type="button" class="eintrag-del-btn" data-pending="${escapeHtml(i.client_id)}" title="Nicht gesendete Aufnahme verwerfen" aria-label="Nicht gesendete Aufnahme verwerfen">🗑️</button>
+                    <button type="button" class="eintrag-verwerfen-btn" data-pending="${escapeHtml(i.client_id)}" title="Nicht gesendete Aufnahme verwerfen" aria-label="Nicht gesendete Aufnahme verwerfen">Verwerfen</button>
                   </div>`,
                 )
                 .join("")}
@@ -254,16 +257,15 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       : "";
 
     let html = `
-      <a class="detail-zurueck" href="#filme">‹ Filme</a>
       <h1 class="view-title detail-title">${typeCornerHtml(roll.film_stock.type)}#${roll.number} — ${escapeHtml(roll.film_stock.name)}</h1>
       <p class="view-hint">${info} ${expiryPillHtml(roll.expired_years)}</p>
       ${roll.notes ? `<p class="view-hint">${escapeHtml(roll.notes)}</p>` : ""}
       <div class="detail-actions">
         ${roll.status === "offen" ? `<a class="status-btn" href="#neue-aufnahme/${roll.number}">+ Aufnahme</a>` : ""}
-        ${next ? `<button type="button" class="status-btn" data-act="status">${escapeHtml(next.label)}</button>` : ""}
-        ${readOnly() ? "" : `<button type="button" class="status-btn status-btn-back" data-act="meta">✏️ Filmangaben</button>`}
-        <a class="detail-csv-btn" href="/api/v2/rolls/${roll.number}/export.csv" download title="Als CSV herunterladen" aria-label="Als CSV herunterladen">📥</a>
-        ${roll.status !== "offen" ? `<button type="button" class="detail-csv-btn detail-del-btn" data-act="delete" title="Film löschen" aria-label="Film #${roll.number} löschen">🗑️</button>` : ""}
+        ${next ? `<button type="button" class="status-btn${roll.status === "offen" ? "" : " status-btn-primary"}" data-act="status">${escapeHtml(next.label)}</button>` : ""}
+        ${readOnly() ? "" : `<button type="button" class="status-btn status-btn-back" data-act="meta">Filmangaben</button>`}
+        <a class="detail-csv-btn" href="/api/v2/rolls/${roll.number}/export.csv" download title="Als CSV herunterladen" aria-label="Als CSV herunterladen">CSV</a>
+        ${roll.status !== "offen" ? `<button type="button" class="detail-csv-btn detail-del-btn" data-act="delete" title="Film löschen" aria-label="Film #${roll.number} löschen">Löschen</button>` : ""}
       </div>
       ${readOnly() ? `<p class="offline-note">Archivierte Filme sind nur lesbar.</p>` : ""}
       ${metaOpen && !readOnly() ? metaFormHtml() : ""}
@@ -413,14 +415,6 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       metaForm.scrollIntoView({ block: "nearest" });
     }
 
-    qsa<HTMLButtonElement>(el, "button[data-act=insert]").forEach((b) => {
-      b.onclick = (ev) => {
-        ev.stopPropagation();
-        if (!canSwitch()) return;
-        mode = { typ: "insert", position: Number(b.dataset.pos) };
-        paint();
-      };
-    });
     qsa<HTMLElement>(el, ".eintrag-klickbar").forEach((row) => {
       const open = () => {
         if (!canSwitch()) return;
@@ -510,6 +504,16 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       mode = null;
       paint();
     };
+    const switchToInsert = (position: number) => {
+      if (formDirty && !confirm("Nicht gespeicherte Änderungen verwerfen?")) return;
+      clearDraft(draftKey);
+      formDirty = false;
+      activeDraftKey = null;
+      mode = { typ: "insert", position };
+      paint();
+    };
+    form.querySelector<HTMLButtonElement>("[data-act=insert-before]")?.addEventListener("click", () => switchToInsert(pos));
+    form.querySelector<HTMLButtonElement>("[data-act=insert-after]")?.addEventListener("click", () => switchToInsert(pos + 1));
     const delForm = form.querySelector<HTMLButtonElement>("[data-act=del-form]");
     if (delForm) {
       delForm.onclick = async () => {

@@ -1,24 +1,16 @@
-import { api, errMsg } from "../api";
+import { errMsg } from "../api";
 import { getDashboard } from "../lib/data";
 import { formatDate, isFresh } from "../lib/dates";
-import { qs, qsa, toast, withBusy } from "../lib/dom";
+import { qs, qsa } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { navigate } from "../lib/nav";
 import { queuedFramesByRoll } from "../lib/queue";
 import { expiryPillHtml, fillBarHtml, typeCornerHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
-import type { Dashboard, Hint, Roll } from "../types";
-
-const HINT_ICONS: Record<Hint["kind"], string> = {
-  voll: "🎞️",
-  lange_in_kamera: "⏳",
-  entwickeln: "🧪",
-  abgelaufen: "📅",
-};
+import type { Dashboard, Roll } from "../types";
 
 function rollCardHtml(r: Roll, queued: number): string {
   const count = r.frame_count + queued;
-  const full = r.is_full || (r.capacity > 0 && count >= r.capacity);
   return `
     <div class="dashboard-card" data-roll="${r.number}" tabindex="0" role="button" aria-label="Film #${r.number} – neue Aufnahme">
       ${typeCornerHtml(r.film_stock.type)}
@@ -31,7 +23,6 @@ function rollCardHtml(r: Roll, queued: number): string {
         <div class="dashboard-count">${count}${r.capacity ? `<span class="dashboard-max">/${r.capacity}</span>` : ""}</div>
         ${fillBarHtml(count, r.capacity)}
       </div>
-      ${full ? `<button type="button" class="dashboard-done-btn" data-done="${r.number}" title="Film abschließen" aria-label="Film #${r.number} abschließen">✓</button>` : ""}
     </div>`;
 }
 
@@ -39,9 +30,9 @@ function lastFrameHtml(d: Dashboard): string {
   const f = d.last_frame;
   if (!f) return "";
   const fresh = isFresh(f.recorded_at, 2 * 60 * 1000);
-  const settings = [f.lens_name, f.shutter, f.aperture, f.flash ? "⚡" : ""].filter(Boolean).map(escapeHtml).join(" · ");
+  const settings = [f.lens_name, f.shutter, f.aperture, f.flash ? "Blitz" : ""].filter(Boolean).map(escapeHtml).join(" · ");
   return `
-    <p class="dashboard-label">Zuletzt${fresh ? ` <span class="frisch-punkt" title="Vor weniger als 2 Minuten aufgenommen"></span>` : ""}</p>
+    <p class="dashboard-label">Zuletzt${fresh ? ` <span class="frisch-text">neu</span>` : ""}</p>
     <a class="frame letzte-aufnahme" href="#zuletzt">
       ${typeCornerHtml(f.roll.type)}
       <div>
@@ -50,31 +41,6 @@ function lastFrameHtml(d: Dashboard): string {
         <div class="frame-meta">${escapeHtml(formatDate(f.date))} ${escapeHtml(f.time)}</div>
         ${settings ? `<div class="frame-meta">${settings}</div>` : ""}
       </div>
-    </a>`;
-}
-
-function continueHtml(d: Dashboard, queued: Map<number, number>): string {
-  const r = d.open_rolls[0];
-  if (!r) {
-    return `
-      <a class="continue-card" href="#neuer-film">
-        <div class="continue-main">
-          <div class="continue-kicker">Loslegen</div>
-          <div class="continue-title">Neuen Film anlegen</div>
-          <div class="continue-meta">Kamera und Film wählen</div>
-        </div>
-        <span class="continue-arrow">→</span>
-      </a>`;
-  }
-  const count = r.frame_count + (queued.get(r.number) ?? 0);
-  return `
-    <a class="continue-card" href="#neue-aufnahme/${r.number}">
-      <div class="continue-main">
-        <div class="continue-kicker">Weiter · ${count}${r.capacity ? `/${r.capacity}` : ""} Aufnahmen</div>
-        <div class="continue-title">#${r.number} · ${escapeHtml(r.film_stock.name)}</div>
-        <div class="continue-meta">${escapeHtml(r.camera.name)}</div>
-      </div>
-      <span class="continue-arrow">→</span>
     </a>`;
 }
 
@@ -99,17 +65,13 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
 
   const hints = d.hints
     .filter((h) => h.kind !== "voll" && h.kind !== "lange_in_kamera")
-    .map(
-      (h) => `<a class="hint hint-${escapeHtml(h.kind)}" href="#film/${h.roll_number}">
-        <span class="hint-icon">${HINT_ICONS[h.kind] ?? "ℹ️"}</span><span>${escapeHtml(h.text)}</span></a>`,
-    )
+    .map((h) => `<a class="hint hint-${escapeHtml(h.kind)}" href="#film/${h.roll_number}">${escapeHtml(h.text)}</a>`)
     .join("");
 
   top.innerHTML = `
     ${result.stale ? `<p class="offline-note">Offline – zuletzt geladene Daten.</p>` : ""}
-    ${continueHtml(d, queued)}
     <div class="section-head">
-      <p class="dashboard-label">Aktiv</p>
+      <p class="dashboard-label">Offene Filme</p>
       <a class="text-link" href="#neuer-film">+ Neuer Film</a>
     </div>
     ${
@@ -133,21 +95,4 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
       }
     });
   });
-  qsa<HTMLButtonElement>(top, ".dashboard-done-btn").forEach((btn) => {
-    btn.addEventListener("click", async (ev) => {
-      ev.stopPropagation();
-      const n = Number(btn.dataset.done);
-      const roll = d.open_rolls.find((r) => r.number === n);
-      if (!confirm(`Film #${n} (${roll?.camera.name ?? ""}) wirklich abschließen?`)) return;
-      await withBusy(btn, async () => {
-        try {
-          await api.post(`/api/v2/rolls/${n}/status`, { status: "abgeschlossen" });
-          toast(`Film #${n} abgeschlossen.`, "ok");
-          navigate("start");
-        } catch (e) {
-          toast(errMsg(e), "error");
-        }
-      });
-    });
-  });
-}
+  }
