@@ -20,7 +20,7 @@ export async function renderNewRoll(ctx: ViewContext): Promise<void> {
       <label>Filmstock
         <span class="select-with-add">
           <select name="film_stock_id" id="stockSel" required></select>
-          <button type="button" class="add-btn" id="addStockBtn" title="Neuen Filmstock anlegen" aria-label="Neuen Filmstock anlegen">+</button>
+          <button type="button" class="add-btn" id="addStockBtn" title="Neuen Filmstock anlegen" aria-label="Neuen Filmstock anlegen">Neu</button>
         </span>
       </label>
       <div class="quick-form" id="quickStock" hidden>
@@ -40,7 +40,7 @@ export async function renderNewRoll(ctx: ViewContext): Promise<void> {
       <label>Kamera
         <span class="select-with-add">
           <select name="camera_id" id="camSel" required></select>
-          <button type="button" class="add-btn" id="addCamBtn" title="Neue Kamera anlegen" aria-label="Neue Kamera anlegen">+</button>
+          <button type="button" class="add-btn" id="addCamBtn" title="Neue Kamera anlegen" aria-label="Neue Kamera anlegen">Neu</button>
         </span>
       </label>
       <div class="quick-form" id="quickCam" hidden>

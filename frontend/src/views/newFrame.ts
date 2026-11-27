@@ -68,14 +68,16 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         </select>
       </label>
 
-      <label>Motivbeschreibung
-        <div class="motiv-row">
-          <textarea name="motif" id="motifInput" rows="1" placeholder="z. B. Teich"></textarea>
-          <button type="button" class="now-btn" id="motifClear" title="Motivbeschreibung leeren" aria-label="Motivbeschreibung leeren">✕</button>
-        </div>
-      </label>
-      <!-- Außerhalb des <label>: Klicks auf die Vorschläge dürfen das Textfeld nicht fokussieren. -->
-      <div class="suggest-list" id="motifSuggest" hidden></div>
+      <div class="motif-field">
+        <label>Motivbeschreibung
+          <div class="motiv-row">
+            <textarea name="motif" id="motifInput" rows="1" placeholder="z. B. Teich"></textarea>
+            <button type="button" class="now-btn" id="motifClear" title="Motivbeschreibung leeren" aria-label="Motivbeschreibung leeren">Leeren</button>
+          </div>
+        </label>
+        <!-- Außerhalb des <label>: Klicks auf die Vorschläge dürfen das Textfeld nicht fokussieren. -->
+        <div class="suggest-list" id="motifSuggest" hidden></div>
+      </div>
       <div class="chip-row motif-recent" id="motifRecent" hidden></div>
 
       <p class="capture-when">
@@ -253,6 +255,14 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
 
   // ---- Anzahl ----
   const saveBtn = qs<HTMLButtonElement>(el, "#saveBtn");
+  let lastSubmit = 0;
+  // Solange die Motivvorschläge offen sind, darf der erste Tap nicht im Blur verloren gehen.
+  saveBtn.addEventListener("pointerdown", (ev) => {
+    if (motifSuggest.hidden) return;
+    ev.preventDefault();
+    motifSuggest.hidden = true;
+    form.requestSubmit();
+  });
   const updateSaveLabel = () => {
     const n = Math.min(50, Math.max(1, parseInt(countInput.value, 10) || 1));
     saveBtn.textContent = n === 1 ? "Aufnahme speichern" : `${n} Aufnahmen speichern`;
@@ -498,6 +508,9 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
       frameDetails.open = true;
       return showError(form, "Bitte Datum und Uhrzeit angeben.");
     }
+    const now = Date.now();
+    if (now - lastSubmit < 500) return;
+    lastSubmit = now;
     const count = Math.min(50, Math.max(1, parseInt(countInput.value, 10) || 1));
     const submittedAt = nowIsoLocal();
     const payload: CreateFramePayload = {

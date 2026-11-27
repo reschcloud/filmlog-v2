@@ -29,6 +29,12 @@ Gesten) erhalten.
   - große, daumenfreundliche Navigation und Aktionen.
 - Unwichtiges wird aus dem Markup entfernt (z. B. erklärende Mini-Hints, dekorative Linien), nicht
   verkleinert.
+- **Startseite:** keine separate „zuletzt genutzte Kamera“-Karte und kein Hero. Eine einzige, nach zuletzt
+  genutzt sortierte Liste der offenen Filme; alle offenen Filme tragen das orange Flächenschema.
+- **Aufnahme:** Motivvorschläge liegen absolut über dem Formular (kein Layoutsprung); ein Tap auf
+  „Aufnahme speichern“ bei offener Vorschlagsliste wird bereits am Pointerdown abgefangen und speichert.
+- **Zeichen:** nur Richtung und native Bedienelemente; Objektaktionen sind deutsche Verben
+  (ADR-0024). Kein SVG-Iconsatz, keine Emojis.
 - Kein Versions-Bump, kein Tag und kein Merge nach `main`, solange die Feldkriterien nicht erfüllt sind.
 
 ## Konsequenzen

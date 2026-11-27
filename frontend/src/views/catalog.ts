@@ -196,6 +196,18 @@ export async function renderCatalog(ctx: ViewContext): Promise<void> {
           <button type="submit" class="btn-primary">Speichern</button>
           <button type="button" class="eintrag-abbrechen-btn" data-act="cancel">Abbrechen</button>
         </div>
+        ${
+          item
+            ? `<div class="cat-form-extra">
+                 ${
+                   sec.archivable
+                     ? `<button type="button" class="status-btn status-btn-back" data-act="archive" data-key="${sec.key}" data-id="${item.id}">${item.archived ? "Reaktivieren" : "Archivieren"}</button>`
+                     : ""
+                 }
+                 <button type="button" class="status-btn status-btn-back cat-delete" data-act="delete" data-key="${sec.key}" data-id="${item.id}">Löschen</button>
+               </div>`
+            : ""
+        }
       </form>`;
   }
 
@@ -203,19 +215,10 @@ export async function renderCatalog(ctx: ViewContext): Promise<void> {
     if (editing && editing.key === sec.key && editing.id === item.id) return `<li class="cat-edit">${formHtml(sec, item)}</li>`;
     const sub = sec.sub(item);
     return `
-      <li class="cat-row${item.archived ? " cat-archived" : ""}">
+      <li class="cat-row${item.archived ? " cat-archived" : ""}" data-key="${sec.key}" data-id="${item.id}" tabindex="0" role="button" aria-label="${escapeHtml(sec.title1(item))} bearbeiten">
         <div class="cat-info">
           <div class="cat-title">${escapeHtml(sec.title1(item))}${item.archived ? ` <span class="badge">archiviert</span>` : ""}</div>
           ${sub ? `<div class="cat-sub">${escapeHtml(sub)}</div>` : ""}
-        </div>
-        <div class="eintrag-aktionen">
-          <button type="button" class="eintrag-edit-btn" data-act="edit" data-key="${sec.key}" data-id="${item.id}" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
-          ${
-            sec.archivable
-              ? `<button type="button" class="eintrag-edit-btn" data-act="archive" data-key="${sec.key}" data-id="${item.id}" title="${item.archived ? "Reaktivieren" : "Archivieren"}" aria-label="${item.archived ? "Reaktivieren" : "Archivieren"}">${item.archived ? "↺" : "□"}</button>`
-              : ""
-          }
-          <button type="button" class="eintrag-del-btn" data-act="delete" data-key="${sec.key}" data-id="${item.id}" title="Löschen" aria-label="Löschen">×</button>
         </div>
       </li>`;
   }
@@ -228,7 +231,7 @@ export async function renderCatalog(ctx: ViewContext): Promise<void> {
         <summary>${escapeHtml(sec.title)} <span class="cat-count">${items.length}</span></summary>
         <div class="cat-body">
           <ul class="cat-list">${items.map((i) => rowHtml(sec, i)).join("") || `<li class="empty-state">Noch keine Einträge.</li>`}</ul>
-          ${adding ? formHtml(sec, null) : `<button type="button" class="status-btn" data-act="new" data-key="${sec.key}">+ Neu</button>`}
+          ${adding ? formHtml(sec, null) : `<button type="button" class="status-btn" data-act="new" data-key="${sec.key}">Neu anlegen</button>`}
           ${
             sec.presets
               ? `<div class="preset-row"><span class="field-note">Preset anwenden:</span>${PRESETS.map((p) => `<button type="button" class="status-btn status-btn-back" data-act="preset" data-key="${sec.key}" data-preset="${p.value}">${p.label}</button>`).join("")}</div>`
@@ -248,6 +251,24 @@ export async function renderCatalog(ctx: ViewContext): Promise<void> {
       });
     });
     qsa<HTMLFormElement>(body, "form.cat-form").forEach(bindForm);
+    qsa<HTMLElement>(body, ".cat-row").forEach((row) => {
+      const open = () => {
+        const openForm = body.querySelector("form.cat-form");
+        if (openForm && !confirm("Nicht gespeicherte Änderungen verwerfen?")) return;
+        editing = { key: row.dataset.key ?? "", id: Number(row.dataset.id) };
+        paint();
+      };
+      row.addEventListener("click", (ev) => {
+        if ((ev.target as HTMLElement).closest("button,a")) return;
+        open();
+      });
+      row.addEventListener("keydown", (ev) => {
+        if ((ev.key === "Enter" || ev.key === " ") && ev.target === row) {
+          ev.preventDefault();
+          open();
+        }
+      });
+    });
   }
 
   async function refresh(): Promise<void> {
@@ -308,6 +329,8 @@ export async function renderCatalog(ctx: ViewContext): Promise<void> {
     const item = id !== null ? sec.items(catalog).find((i) => i.id === id) : undefined;
 
     if (act === "new") {
+      const openForm = body.querySelector("form.cat-form");
+      if (openForm && !confirm("Nicht gespeicherte Änderungen verwerfen?")) return;
       editing = { key: sec.key, id: null };
       paint();
       return;

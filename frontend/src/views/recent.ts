@@ -2,7 +2,6 @@ import { api, errMsg } from "../api";
 import { optionsHtml, qs, setErrorState, setLoading, toast, withBusy } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { todayStr } from "../lib/dates";
-import { navigate } from "../lib/nav";
 import { frameMetaHtml, typeCornerHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { FrameWithRoll, RecentFrames, Roll } from "../types";
@@ -37,20 +36,16 @@ export async function renderRecent(ctx: ViewContext): Promise<void> {
     })
     .catch(() => undefined);
 
-  function cardHtml(f: FrameWithRoll, i: number): string {
+  function cardHtml(f: FrameWithRoll): string {
     return `
-      <div class="eintrag eintrag-zuletzt">
+      <a class="eintrag eintrag-zuletzt eintrag-link" href="#film/${f.roll_number}/${f.position}">
         ${typeCornerHtml(f.roll.type)}
         <div class="eintrag-info">
           <div class="eintrag-motiv">${f.motif ? escapeHtml(f.motif) : "(kein Motiv)"}</div>
           <div class="eintrag-film">${escapeHtml(f.roll.camera_name)} · #${f.roll_number} · ${escapeHtml(f.roll.film_stock_name)} · Nr. ${f.position}</div>
           <div class="eintrag-meta">${frameMetaHtml(f)}</div>
         </div>
-        <div class="eintrag-aktionen">
-          <button type="button" class="eintrag-edit-btn" data-act="edit" data-i="${i}" title="${f.roll.status === "archiviert" ? "Ansehen" : "Bearbeiten"}" aria-label="Aufnahme ansehen oder bearbeiten">${f.roll.status === "archiviert" ? "›" : "✎"}</button>
-          ${f.roll.status === "archiviert" ? "" : `<button type="button" class="eintrag-del-btn" data-act="del" data-i="${i}" title="Löschen" aria-label="Aufnahme löschen">×</button>`}
-        </div>
-      </div>`;
+      </a>`;
   }
 
   function paint(): void {
@@ -60,7 +55,7 @@ export async function renderRecent(ctx: ViewContext): Promise<void> {
     }
     const today = todayStr();
     const section = (title: string, test: (f: FrameWithRoll) => boolean): string => {
-      const cards = items.map((f, i) => (test(f) ? cardHtml(f, i) : "")).join("");
+      const cards = items.map((f) => (test(f) ? cardHtml(f) : "")).join("");
       return cards ? `<p class="dashboard-label">${title}</p><div class="eintraege-liste eintraege-liste-abstand">${cards}</div>` : "";
     };
     list.innerHTML =
@@ -101,32 +96,9 @@ export async function renderRecent(ctx: ViewContext): Promise<void> {
   };
 
   list.addEventListener("click", async (ev) => {
-    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>("button[data-act]");
+    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-act="more"]');
     if (!btn) return;
-    if (btn.dataset.act === "more") {
-      await withBusy(btn, () => load(false));
-      return;
-    }
-    const f = items[Number(btn.dataset.i)];
-    if (!f) return;
-    if (btn.dataset.act === "edit") {
-      navigate(`film/${f.roll_number}/${f.position}`);
-      return;
-    }
-    const name = f.motif || `Aufnahme ${f.position}`;
-    if (!confirm(`„${name}“ (${f.roll.camera_name} · ${f.roll.film_stock_name}, Nr. ${f.position}) wirklich löschen? Die folgenden Aufnahmen dieses Films rücken nach.`)) return;
-    await withBusy(btn, async () => {
-      try {
-        await api.del(`/api/v2/frames/${f.id}`);
-        items = items
-          .filter((x) => x.id !== f.id)
-          .map((x) => (x.roll_number === f.roll_number && x.position > f.position ? { ...x, position: x.position - 1 } : x));
-        paint();
-        toast("Aufnahme gelöscht.", "ok");
-      } catch (e) {
-        toast(errMsg(e), "error");
-      }
-    });
+    await withBusy(btn, () => load(false));
   });
 
   await load(true);
