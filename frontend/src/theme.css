@@ -27,7 +27,7 @@
   --x-small: 14px;
   --small: 14px;
   --medium: 18px;
-  --large: 24px;
+  --large: 21px;
 }
 
 .theme body {
@@ -267,7 +267,7 @@
 .theme .dashboard-card:hover { background: var(--amber-bright); }
 .theme .dashboard-card:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .theme .dashboard-typ-ecke { display: none; }
-.theme .dashboard-kamera { color: var(--ink); font-size: 21px; }
+.theme .dashboard-kamera { color: var(--ink); font-size: var(--large); }
 .theme .dashboard-film { color: var(--ink); font-size: var(--medium); }
 .theme .dashboard-details { color: var(--ink); font-size: var(--medium); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .theme .dashboard-count { color: var(--ink); font-size: 28px; }
