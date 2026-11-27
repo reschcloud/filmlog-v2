@@ -654,6 +654,8 @@
   border: 1px solid var(--amber-dim);
   border-radius: 10px;
 }
+.theme .pin-icon { display: inline-flex; align-items: center; justify-content: center; vertical-align: -3px; line-height: 1; }
+.theme .pin-icon svg { display: block; }
 .theme .chip small { color: var(--ink-soft); }
 .theme .chip:hover { background: var(--amber); color: var(--ink); }
 .theme .add-btn {

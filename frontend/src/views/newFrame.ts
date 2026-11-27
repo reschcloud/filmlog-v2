@@ -7,6 +7,7 @@ import { escapeHtml } from "../lib/escape";
 import { uuid } from "../lib/ids";
 import { navigate } from "../lib/nav";
 import { enqueue, flushQueue, queueCount, queuedFramesByRoll, removeQueued } from "../lib/queue";
+import { locationHtml, pinIconHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Catalog, CreateFramePayload, Dashboard, Frame, FrameSuggestion, PlaceSuggestion } from "../types";
 
@@ -169,6 +170,8 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const frameDetails = qs<HTMLDetailsElement>(el, "#frameDetails");
   const detailsSummary = qs(el, "#detailsSummary");
   const submits = qsa<HTMLButtonElement>(form, "button[type=submit]");
+  let lat: number | null = null;
+  let lon: number | null = null;
 
   const updateWhen = () => {
     whenText.textContent =
@@ -177,11 +180,14 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         : "Datum/Uhrzeit fehlen";
   };
   const updateDetailsSummary = () => {
-    const lens = lensSel.value ? (lensSel.selectedOptions[0]?.textContent ?? "Objektiv") : "kein Objektiv";
-    const parts = [lens, shutterSel.value || "Zeit offen", apertureSel.value || "Blende offen"];
+    const parts: string[] = [];
+    if (lensSel.value) parts.push(escapeHtml(lensSel.selectedOptions[0]?.textContent ?? "Objektiv"));
+    if (shutterSel.value) parts.push(escapeHtml(shutterSel.value));
+    if (apertureSel.value) parts.push(escapeHtml(apertureSel.value));
     if (flashChk.checked) parts.push("Blitz");
-    if (placeInput.value.trim()) parts.push(placeInput.value.trim());
-    detailsSummary.textContent = `Details · ${parts.join(" · ")}`;
+    const place = locationHtml(placeInput.value, lat, lon);
+    if (place) parts.push(place);
+    detailsSummary.innerHTML = parts.length ? `Details · ${parts.join(" · ")}` : "Details";
   };
   whenEdit.onclick = () => {
     frameDetails.open = true;
@@ -442,8 +448,6 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   });
 
   // ---- Ort / GPS ----
-  let lat: number | null = null;
-  let lon: number | null = null;
   let autoPlace = "";
   const setPlace = (text: string, auto: boolean) => {
     placeInput.value = text;
@@ -466,11 +470,9 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
       const first = places[0];
       if (first && first.distance_m <= 50 && (!placeInput.value || placeInput.value === autoPlace)) {
         setPlace(first.location_text, true);
-      } else if (!first && !placeInput.value && lat !== null && lon !== null) {
-        setPlace(`${lat.toFixed(5)}, ${lon.toFixed(5)}`, true);
       }
     } catch {
-      if (!placeInput.value && lat !== null && lon !== null) setPlace(`${lat.toFixed(5)}, ${lon.toFixed(5)}`, true);
+      // Kein Ortsname gefunden: Der Pin im Details-Text zeigt die vorhandene Position.
     }
   }
   placeChips.addEventListener("click", (ev) => {
@@ -487,7 +489,8 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         if (!ctx.alive()) return;
         lat = pos.coords.latitude;
         lon = pos.coords.longitude;
-        gpsStatus.textContent = `GPS: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        gpsStatus.innerHTML = `${pinIconHtml()} Standort gefunden`;
+        updateDetailsSummary();
         void loadPlaces();
       },
       () => {

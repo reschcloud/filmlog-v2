@@ -1,6 +1,6 @@
 # ADR-0024: Zeichen nur für Richtung, Aktionen als deutsche Verben
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Datum:** 2026-11-27
 - **Betrifft:** ADR-0015, ADR-0022, ADR-0023
 

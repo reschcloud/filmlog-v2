@@ -1,8 +1,9 @@
 # ADR-0023: Design-Experiment „Rams × Tesla“ auf eigenem Branch
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Datum:** 2026-11-27
 - **Betrifft:** ADR-0001, ADR-0015, ADR-0022
+- **Ersetzt teilweise:** ADR-0015 (visuelles System), ADR-0022 (Typografiegrößen)
 
 ## Kontext
 
@@ -33,6 +34,9 @@ Gesten) erhalten.
   genutzt sortierte Liste der offenen Filme; alle offenen Filme tragen das orange Flächenschema.
 - **Aufnahme:** Motivvorschläge liegen absolut über dem Formular (kein Layoutsprung); ein Tap auf
   „Aufnahme speichern“ bei offener Vorschlagsliste wird bereits am Pointerdown abgefangen und speichert.
+- **Details-Zeile:** zeigt nur tatsächlich gesetzte Werte (kein „kein Objektiv“, „Blende offen“ o. Ä.).
+  Für eine gefundene Position steht dort ein Pin-Icon statt roher Koordinaten; Koordinaten werden nie
+  als Ortstext angezeigt.
 - **Zeichen:** nur Richtung und native Bedienelemente; Objektaktionen sind deutsche Verben
   (ADR-0024). Kein SVG-Iconsatz, keine Emojis.
 - Kein Versions-Bump, kein Tag und kein Merge nach `main`, solange die Feldkriterien nicht erfüllt sind.
