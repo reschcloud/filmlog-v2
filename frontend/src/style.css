@@ -19,10 +19,10 @@
   --font-display: "TMT-LimkinVF", sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-serif: ui-serif, Georgia, "Liberation Serif", "Times New Roman", serif;
-  --x-small: 11px;
-  --small: 13px;
-  --medium: 15px;
-  --large: 19px
+  --x-small: 12px;
+  --small: 14px;
+  --medium: 16px;
+  --large: 20px
 
 }
 
@@ -92,7 +92,16 @@ body {
 }
 .brand-mark-accent { color: var(--red-bright); }
 .header-left { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.nav-back { font-size: 24px; line-height: 1; padding-bottom: 2px; }
+.icon-btn.nav-back {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  padding-bottom: 3px;
+  color: var(--paper);
+  background: rgba(242,234,217,0.16);
+  border: 1px solid rgba(242,234,217,0.4);
+}
+.icon-btn.nav-back:hover { background: rgba(242,234,217,0.28); }
 .nav-back[hidden] { display: none; }
 
 /* Feste Hauptnavigation, im Aufnahme-Modus ausgeblendet. */
@@ -581,8 +590,8 @@ body {
   gap: 12px;
   margin: -2px 0 0;
   font-family: var(--font-serif);
-  font-size: var(--medium);
-  color: var(--ink-soft);
+  font-size: 17px;
+  color: var(--ink);
 }
 .when-edit {
   flex-shrink: 0;
@@ -593,7 +602,7 @@ body {
   cursor: pointer;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--small);
+  font-size: var(--medium);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--red-dim);
@@ -601,18 +610,16 @@ body {
 .frame-details { border-top: 1px solid var(--paper-dim); padding-top: 4px; }
 .frame-details summary {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   min-height: 44px;
+  padding: 10px 0 6px;
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: var(--small);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: var(--medium);
+  line-height: 1.35;
   color: var(--ink-soft);
   list-style: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
 }
 .frame-details summary::-webkit-details-marker { display: none; }
 .frame-details summary::before { content: "▸ "; color: var(--red-dim); flex-shrink: 0; }
@@ -1319,9 +1326,11 @@ a.letzte-aufnahme { color: inherit; display: block; position: relative; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .motif-recent { margin: -6px 0 0; }
 .chip {
-  font-family: var(--font-mono); font-size: var(--small); text-transform: none;
+  max-width: 100%;
+  font-family: var(--font-mono); font-size: var(--medium); text-transform: none;
   background: var(--paper-dim); color: var(--ink); border: 1px solid var(--amber);
   border-radius: 999px; padding: 10px 14px; min-height: 44px; cursor: pointer;
+  text-align: left; white-space: normal;
 }
 .chip small { color: var(--ink-soft); }
 .chip:hover { background: var(--amber); color: var(--ink); }

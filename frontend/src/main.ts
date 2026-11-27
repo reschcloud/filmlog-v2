@@ -47,7 +47,6 @@ const NAV_KEY: Record<string, string> = {
   filme: "filme",
   film: "filme",
   suche: "suche",
-  "neue-aufnahme": "aufnahme",
   mehr: "mehr",
   zuletzt: "mehr",
   stats: "mehr",

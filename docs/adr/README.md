@@ -37,6 +37,8 @@ Umsetzung; bei Widersprüchen gilt die neuere ADR.
 | [0018](0018-tests-und-qualitaet.md) | Tests gegen temporäre SQLite, Backend `pytest`/`ruff`, Frontend `tsc`/`vite`, CI für beides. | Accepted |
 | [0019](0019-normalisierter-katalog.md) | Kameras, Objektive, Filmstocks, Zeiten und Blenden sind normalisierte Katalog-Entitäten; Archiv statt Löschen. | Accepted |
 | [0020](0020-frontend-daten-cache.md) | Nur Katalog/Dashboard/Vorschläge werden gecacht; Listen, Details, Suche und Stats bleiben live. | Accepted |
+| [0021](0021-navigation-ohne-aufnahme-eintrag.md) | Untere Navigation ohne generischen „Aufnahme“-Eintrag; Aufnahme startet filmbezogen. | Accepted |
+| [0022](0022-field-typografie-und-zurueck.md) | Mindestgrößen für Feldtexte und ein deutlich sichtbarer Zurück-Button. | Accepted |
 
 ## Vorlage
 
