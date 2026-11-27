@@ -11,12 +11,34 @@ export function qsa<T extends Element = HTMLElement>(root: ParentNode, selector:
   return Array.from(root.querySelectorAll<T>(selector));
 }
 
-export function toast(message: string, kind: "info" | "error" | "ok" = "info", ms = 3500): void {
+export interface ToastAction {
+  label: string;
+  onClick: () => void | Promise<void>;
+}
+
+export function toast(message: string, kind: "info" | "error" | "ok" = "info", ms = 3500, action?: ToastAction): void {
   const host = document.getElementById("toasts");
   if (!host) return;
   const el = document.createElement("div");
   el.className = `toast toast-${kind}`;
-  el.textContent = message;
+  const text = document.createElement("span");
+  text.textContent = message;
+  el.appendChild(text);
+  if (action) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "toast-action";
+    btn.textContent = action.label;
+    btn.onclick = async () => {
+      btn.disabled = true;
+      try {
+        await action.onClick();
+      } finally {
+        el.remove();
+      }
+    };
+    el.appendChild(btn);
+  }
   host.appendChild(el);
   window.setTimeout(() => el.remove(), kind === "error" ? Math.max(ms, 6000) : ms);
 }

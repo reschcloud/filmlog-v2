@@ -491,6 +491,45 @@ body {
   appearance: none;
 }
 
+/* Speicherleiste bleibt im Aufnahmeformular immer im Daumenbereich. */
+.frame-form { padding-bottom: 150px; }
+.save-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  background: var(--paper);
+  border-top: 1px solid var(--paper-dim);
+  box-shadow: 0 -8px 20px rgba(0,0,0,0.18);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.save-bar-inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 10px clamp(16px, 5vw, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.save-bar-main { display: flex; align-items: center; gap: 10px; }
+.save-bar-main .anzahl-stepper { flex: 1; min-width: 0; }
+.save-count {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: var(--large); color: var(--ink); white-space: nowrap;
+}
+.save-done {
+  flex-shrink: 0; min-height: 44px; padding: 0 8px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--small);
+  text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft);
+}
+.save-done:hover { color: var(--red-dim); }
+.save-full { margin: 0; color: var(--red-dim); }
+.save-bar .btn-primary { width: 100%; }
+
 button, .anzahl-btn, .add-btn {
   touch-action: manipulation;
 }
@@ -1005,12 +1044,22 @@ a.letzte-aufnahme { color: inherit; display: block; position: relative; }
   z-index: 100; pointer-events: none; padding: 0 16px;
 }
 .toast {
+  display: flex; align-items: center; gap: 12px;
   background: var(--paper); color: var(--ink);
   border-left: 6px solid var(--amber); border-radius: 3px;
   padding: 12px 16px; max-width: 520px; width: 100%;
   font-size: var(--medium); box-shadow: 0 8px 24px rgba(0,0,0,0.45);
   animation: toast-in .2s ease;
 }
+.toast > span { flex: 1; }
+.toast-action {
+  flex-shrink: 0; min-height: 44px; padding: 0 0 0 12px;
+  background: none; border: none; border-left: 1px solid var(--paper-dim);
+  font-family: var(--font-display); font-weight: 700; font-size: var(--small);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--red-dim); cursor: pointer; pointer-events: auto;
+}
+.toast-action:disabled { opacity: .55; cursor: default; }
 .toast-ok { border-left-color: #4caf50; }
 .toast-error { border-left-color: var(--red); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
@@ -1112,6 +1161,7 @@ a.tile { min-height: 44px; }
 .suggest-item:last-child { border-bottom: none; }
 .suggest-item:hover { background: var(--paper-dim); }
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.motif-recent { margin: -6px 0 0; }
 .chip {
   font-family: var(--font-mono); font-size: var(--small); text-transform: none;
   background: var(--paper-dim); color: var(--ink); border: 1px solid var(--amber);
@@ -1189,6 +1239,7 @@ a.tile { min-height: 44px; }
 
 @media (max-width: 400px) {
   .app-header, #app { padding-left: 12px; padding-right: 12px; }
+  .save-bar-inner { padding-left: 12px; padding-right: 12px; }
   .dist-row { grid-template-columns: 56px 1fr 30px; }
   .queue-badge { padding: 9px 10px 6px; }
 }

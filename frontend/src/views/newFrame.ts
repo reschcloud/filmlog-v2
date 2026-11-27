@@ -1,11 +1,11 @@
 import { api, errMsg, isOfflineError } from "../api";
 import { getCatalog, getDashboard, getFrameSuggestion } from "../lib/data";
 import { nowIsoLocal, nowTimeStr, todayStr } from "../lib/dates";
-import { debounce, optionsHtml, qs, qsa, showError, toast, withBusy } from "../lib/dom";
+import { debounce, optionsHtml, qs, qsa, showError, toast, withBusy, type ToastAction } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { uuid } from "../lib/ids";
 import { navigate } from "../lib/nav";
-import { enqueue, flushQueue, queueCount, queuedFramesByRoll } from "../lib/queue";
+import { enqueue, flushQueue, queueCount, queuedFramesByRoll, removeQueued } from "../lib/queue";
 import type { ViewContext } from "../lib/view";
 import type { Catalog, CreateFramePayload, Dashboard, Frame, FrameSuggestion, PlaceSuggestion } from "../types";
 
@@ -41,7 +41,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
 
   el.innerHTML = `
     ${stale ? `<p class="offline-note">Offline – gespeicherte Auswahllisten. Aufnahmen werden lokal gespeichert und später gesendet.</p>` : ""}
-    <form id="frameForm" class="card" autocomplete="off">
+    <form id="frameForm" class="card frame-form" autocomplete="off">
       <label>Kamera / Film
         <select name="roll" id="rollSel" required>
           ${dash.open_rolls
@@ -61,6 +61,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
       </label>
       <!-- Außerhalb des <label>: Klicks auf die Vorschläge dürfen das Textfeld nicht fokussieren. -->
       <div class="suggest-list" id="motifSuggest" hidden></div>
+      <div class="chip-row motif-recent" id="motifRecent" hidden></div>
 
       <div class="field-row field-row-objektiv">
         <label>Objektiv
@@ -101,21 +102,28 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         </label>
       </div>
 
-      <label>Anzahl Aufnahmen
-        <div class="anzahl-stepper">
-          <button type="button" class="anzahl-btn" id="countMinus" aria-label="Weniger">−</button>
-          <input type="number" name="count" id="countInput" min="1" max="50" step="1" value="1">
-          <button type="button" class="anzahl-btn" id="countPlus" aria-label="Mehr">+</button>
+      <div class="save-bar">
+        <div class="save-bar-inner">
+          <div class="save-bar-main">
+            <span class="save-count" id="rollCount"></span>
+            <div class="anzahl-stepper">
+              <button type="button" class="anzahl-btn" id="countMinus" aria-label="Weniger">−</button>
+              <input type="number" name="count" id="countInput" min="1" max="50" step="1" value="1" aria-label="Anzahl Aufnahmen">
+              <button type="button" class="anzahl-btn" id="countPlus" aria-label="Mehr">+</button>
+            </div>
+            <button type="button" class="save-done" id="doneBtn">Fertig</button>
+          </div>
+          <p class="field-note save-full" id="fullNote" hidden></p>
+          <button type="submit" class="btn-primary" id="saveBtn">Aufnahme speichern</button>
         </div>
-      </label>
-
-      <button type="submit" class="btn-primary" id="saveBtn">Aufnahme speichern</button>
+      </div>
     </form>`;
 
   const form = qs<HTMLFormElement>(el, "#frameForm");
   const rollSel = qs<HTMLSelectElement>(el, "#rollSel");
   const motif = qs<HTMLTextAreaElement>(el, "#motifInput");
   const motifSuggest = qs(el, "#motifSuggest");
+  const motifRecent = qs(el, "#motifRecent");
   const lensSel = qs<HTMLSelectElement>(el, "#lensSel");
   const flashChk = qs<HTMLInputElement>(el, "#flashChk");
   const shutterSel = qs<HTMLSelectElement>(el, "#shutterSel");
@@ -126,10 +134,31 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const dateInput = qs<HTMLInputElement>(el, "#dateInput");
   const timeInput = qs<HTMLInputElement>(el, "#timeInput");
   const countInput = qs<HTMLInputElement>(el, "#countInput");
+  const rollCount = qs(el, "#rollCount");
+  const fullNote = qs(el, "#fullNote");
+  const doneBtn = qs<HTMLButtonElement>(el, "#doneBtn");
   const submits = qsa<HTMLButtonElement>(form, "button[type=submit]");
+
+  const rollCounts = new Map<number, number>();
+  for (const r of dash.open_rolls) rollCounts.set(r.number, r.frame_count + (queued.get(r.number) ?? 0));
+  const selectedRoll = () => dash.open_rolls.find((r) => r.number === Number(rollSel.value));
+  const currentCount = () => rollCounts.get(Number(rollSel.value)) ?? 0;
+  const updateRollMeta = () => {
+    const r = selectedRoll();
+    const n = currentCount();
+    const cap = r?.capacity ?? 0;
+    rollCount.textContent = cap ? `${n}/${cap}` : String(n);
+    fullNote.hidden = !cap || n < cap;
+    fullNote.textContent = cap && n >= cap ? `Film voll (${n}/${cap}) – weitere Aufnahmen zählen als Bonus.` : "";
+    const opt = rollSel.selectedOptions[0];
+    if (opt && r) {
+      opt.textContent = `${r.camera.name} · ${r.film_stock.name} #${r.number} (${n}/${cap})${cap && n >= cap ? " · voll" : ""}`;
+    }
+  };
 
   const wanted = ctx.params[0];
   if (wanted && dash.open_rolls.some((r) => String(r.number) === wanted)) rollSel.value = wanted;
+  updateRollMeta();
 
   // ---- Datum / Uhrzeit ----
   let dtTouched = false;
@@ -172,6 +201,9 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const lensesActive = catalog.lenses.filter((l) => !l.archived);
   let sugg: FrameSuggestion | null = null;
   let showAllLenses = false;
+  let lensTouched = false;
+  let shutterTouched = false;
+  let apertureTouched = false;
 
   function withCurrent(labels: string[], current: string | null | undefined): string[] {
     return current && !labels.includes(current) ? [...labels, current] : labels;
@@ -192,11 +224,14 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     lensSel.innerHTML = html;
   }
   lensSel.onchange = () => {
+    lensTouched = true;
     if (lensSel.value === ALL_LENSES) {
       showAllLenses = true;
       fillLenses(null);
     }
   };
+  shutterSel.onchange = () => (shutterTouched = true);
+  apertureSel.onchange = () => (apertureTouched = true);
 
   function fillSelect(sel: HTMLSelectElement, labels: string[], selected: string | null | undefined): void {
     sel.innerHTML = optionsHtml(
@@ -207,6 +242,19 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   }
   const shutterLabels = catalog.shutter_speeds.map((s) => s.label);
   const apertureLabels = catalog.apertures.map((a) => a.label);
+
+  let lastMotif: string | null = null;
+
+  function updateMotifRecent(): void {
+    const recent = lastMotif?.trim();
+    if (!recent || motif.value.trim()) {
+      motifRecent.hidden = true;
+      motifRecent.innerHTML = "";
+      return;
+    }
+    motifRecent.hidden = false;
+    motifRecent.innerHTML = `<button type="button" class="chip" data-motif="${escapeHtml(recent)}">wie zuletzt: ${escapeHtml(recent)}</button>`;
+  }
 
   async function applySuggestion(roll: number): Promise<void> {
     let s: FrameSuggestion | null = null;
@@ -222,22 +270,30 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     const restricted = s?.lens_ids ?? [];
     if (lensId !== null && restricted.length && !restricted.includes(lensId)) showAllLenses = true;
     if (lensId === null && restricted.length) lensId = restricted[0] ?? null;
-    fillLenses(lensId);
-    fillSelect(shutterSel, shutterLabels, s?.shutter ?? null);
-    fillSelect(apertureSel, apertureLabels, s?.aperture ?? null);
-    motif.value = s?.motif ?? "";
+    if (!lensTouched) fillLenses(lensId);
+    if (!shutterTouched) fillSelect(shutterSel, shutterLabels, s?.shutter ?? null);
+    if (!apertureTouched) fillSelect(apertureSel, apertureLabels, s?.aperture ?? null);
+    lastMotif = s?.motif ?? null;
+    updateMotifRecent();
   }
 
   fillLenses(null);
   fillSelect(shutterSel, shutterLabels, null);
   fillSelect(apertureSel, apertureLabels, null);
-  rollSel.onchange = () => void applySuggestion(Number(rollSel.value));
+  rollSel.onchange = () => {
+    lensTouched = false;
+    shutterTouched = false;
+    apertureTouched = false;
+    updateRollMeta();
+    void applySuggestion(Number(rollSel.value));
+  };
   void applySuggestion(Number(rollSel.value));
 
   // ---- Motiv ----
   qs(el, "#motifClear").onclick = () => {
     motif.value = "";
     motifSuggest.hidden = true;
+    updateMotifRecent();
     motif.focus();
   };
   let motifSeq = 0;
@@ -260,7 +316,10 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
       motifSuggest.hidden = true;
     }
   }, 250);
-  motif.addEventListener("input", loadMotifs);
+  motif.addEventListener("input", () => {
+    updateMotifRecent();
+    loadMotifs();
+  });
   motif.addEventListener("blur", () => window.setTimeout(() => (motifSuggest.hidden = true), 150));
   // Auswahl bei "click" statt "pointerdown": Die Liste bleibt bis zum Klick sichtbar, dadurch landet
   // der Klick auf dem Button und nicht (Ghost-Klick) auf dem dahinterliegenden Formularfeld. preventDefault
@@ -271,6 +330,15 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     ev.preventDefault();
     motif.value = btn.dataset.m ?? "";
     motifSuggest.hidden = true;
+    updateMotifRecent();
+    motif.focus();
+  });
+  motifRecent.addEventListener("click", (ev) => {
+    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>(".chip");
+    if (!btn) return;
+    ev.preventDefault();
+    motif.value = btn.dataset.motif ?? "";
+    updateMotifRecent();
     motif.focus();
   });
 
@@ -360,16 +428,42 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     if (apertureSel.value) payload.aperture = apertureSel.value;
     const rollInfo = dash.open_rolls.find((r) => r.number === roll);
     const label = m || `${rollInfo?.camera.name ?? "Film"} #${roll}`;
+    const beforeCount = currentCount();
+
+    const finishSave = (newCount: number, message: string, action?: ToastAction) => {
+      rollCounts.set(roll, newCount);
+      if (Number(rollSel.value) === roll) {
+        if (!dtTouched) setNow();
+        motif.value = "";
+        motifSuggest.hidden = true;
+        updateMotifRecent();
+        countInput.value = "1";
+        updateSaveLabel();
+        motif.focus();
+      }
+      updateRollMeta();
+      toast(message, "ok", action ? 9000 : 5000, action);
+    };
 
     const saveOffline = async () => {
       payload.recorded_at = submittedAt;
       await enqueue(payload, roll, label);
-      toast(
+      const clientId = payload.client_id;
+      finishSave(
+        beforeCount + count,
         `${count === 1 ? "Aufnahme" : `${count} Aufnahmen`} offline gespeichert – wird später gesendet.`,
-        "ok",
-        5000,
+        clientId
+          ? {
+              label: "Rückgängig",
+              onClick: async () => {
+                await removeQueued(clientId);
+                rollCounts.set(roll, beforeCount);
+                updateRollMeta();
+                toast("Offline-Aufnahme verworfen.", "ok");
+              },
+            }
+          : undefined,
       );
-      navigate("start");
     };
 
     await withBusy(submits, async () => {
@@ -381,8 +475,26 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         const last = frames[frames.length - 1];
         const where =
           first && last ? (first.position === last.position ? ` (Nr. ${first.position})` : ` (Nr. ${first.position}–${last.position})`) : "";
-        toast(`${count === 1 ? "Aufnahme" : `${count} Aufnahmen`} gespeichert${where}.`, "ok");
-        navigate("start");
+        finishSave(
+          beforeCount + count,
+          `${count === 1 ? "Aufnahme" : `${count} Aufnahmen`} gespeichert${where}.`,
+          frames.length
+            ? {
+                label: "Rückgängig",
+                onClick: async () => {
+                  try {
+                    const ordered = [...frames].sort((a, b) => b.position - a.position);
+                    for (const f of ordered) await api.del(`/api/v2/frames/${f.id}`);
+                    rollCounts.set(roll, beforeCount);
+                    updateRollMeta();
+                    toast("Rückgängig gemacht.", "ok");
+                  } catch (e) {
+                    toast(errMsg(e), "error");
+                  }
+                },
+              }
+            : undefined,
+        );
       } catch (e) {
         if (isOfflineError(e)) {
           try {
@@ -395,5 +507,10 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         }
       }
     });
+  };
+
+  doneBtn.onclick = () => {
+    const roll = Number(rollSel.value);
+    if (roll) navigate(`film/${roll}`);
   };
 }

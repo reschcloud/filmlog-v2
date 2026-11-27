@@ -89,6 +89,12 @@ async function removeItem(clientId: string): Promise<void> {
   await run("readwrite", (s) => s.delete(clientId));
 }
 
+/** Eine noch nicht gesendete Aufnahme verwerfen (Undo nach Offline-Speichern). */
+export async function removeQueued(clientId: string): Promise<void> {
+  await removeItem(clientId);
+  await notify();
+}
+
 /** Anzahl wartender Aufnahmen je Film (inkl. count). */
 export async function queuedFramesByRoll(): Promise<Map<number, number>> {
   const map = new Map<number, number>();
