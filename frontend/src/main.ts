@@ -6,7 +6,7 @@ import { fetchMe } from "./lib/auth";
 import { initTheme } from "./lib/theme";
 import { setErrorState, toast } from "./lib/dom";
 import { EVT_QUEUE, EVT_SYNCED } from "./lib/events";
-import { currentRoute, navigate, setRerender } from "./lib/nav";
+import { currentRoute, setRerender } from "./lib/nav";
 import { failedFrameCount, flushQueue, queueCount, queuedFrameCount, type FlushResult } from "./lib/queue";
 import type { ViewContext, ViewFn } from "./lib/view";
 import { renderCatalog } from "./views/catalog";
@@ -40,7 +40,6 @@ initTheme();
 document.title = `Filmlog v${__APP_VERSION__}`;
 
 const app = document.getElementById("app") as HTMLElement;
-const backBtn = document.getElementById("backBtn") as HTMLButtonElement;
 const bottomNav = document.getElementById("bottomNav") as HTMLElement;
 const failedBadge = document.getElementById("failedBadge") as HTMLElement;
 
@@ -70,7 +69,6 @@ function renderRoute(): void {
   const routeName = routes[name] ? name : "start";
   const fn = routes[routeName] ?? routes.start;
   const capture = routeName === "neue-aufnahme";
-  backBtn.hidden = routeName === "start";
   bottomNav.hidden = capture;
   document.body.classList.toggle("capture-mode", capture);
   document.body.classList.toggle("nav-visible", !capture);
@@ -97,7 +95,6 @@ function showLogin(): void {
   if (loginShown) return;
   loginShown = true;
   loggedIn = false;
-  backBtn.hidden = true;
   bottomNav.hidden = true;
   document.body.classList.remove("nav-visible", "capture-mode");
   renderToken++;
@@ -159,10 +156,7 @@ document.querySelector<HTMLAnchorElement>(".brand")?.addEventListener("click", (
   if (location.hash === "#start") window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-backBtn.addEventListener("click", () => {
-  if (history.length > 1) history.back();
-  else navigate("start");
-});
+
 
 window.addEventListener(EVT_QUEUE, () => void updateBadge());
 window.addEventListener(EVT_SYNCED, (ev) => {

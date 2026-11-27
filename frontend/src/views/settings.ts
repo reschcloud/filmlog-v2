@@ -57,6 +57,7 @@ export function renderSettings(ctx: ViewContext): void {
     <p class="dashboard-label">Darstellung</p>
     <div class="card">
       <div class="theme-switch" role="group" aria-label="Darstellung">
+        <button type="button" class="theme-option" data-theme-value="auto">Auto</button>
         <button type="button" class="theme-option" data-theme-value="dark">Dunkel</button>
         <button type="button" class="theme-option" data-theme-value="light">Hell</button>
       </div>
@@ -107,7 +108,7 @@ export function renderSettings(ctx: ViewContext): void {
   const themeButtons = qsa<HTMLButtonElement>(el, ".theme-option");
   const markTheme = () =>
     themeButtons.forEach((b) => {
-      const active = b.dataset.themeValue === document.documentElement.dataset.theme;
+      const active = b.dataset.themeValue === document.documentElement.dataset.themePref;
       b.classList.toggle("aktiv", active);
       b.setAttribute("aria-pressed", String(active));
     });

@@ -85,24 +85,7 @@
   color: var(--paper);
 }
 .theme .brand-mark-accent { color: var(--amber); }
-.theme .header-left { gap: 8px; }
-.theme .icon-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: var(--bg-soft);
-  border: 1px solid rgba(241, 236, 226, 0.16);
-  color: var(--paper);
-  font-size: 22px;
-}
-.theme .icon-btn:hover { background: #2e251d; }
-.theme .icon-btn.nav-back {
-  width: 48px;
-  height: 48px;
-  font-size: 32px;
-  background: var(--bg-soft);
-  border: 1px solid rgba(241, 236, 226, 0.3);
-}
+
 .theme .queue-badge {
   min-width: 48px;
   min-height: 48px;
@@ -750,16 +733,7 @@
 .theme[data-theme="light"] .view-title,
 .theme[data-theme="light"] .detail-title,
 .theme[data-theme="light"] .detail-title .dashboard-typ-ecke { color: var(--ink); }
-.theme[data-theme="light"] .icon-btn {
-  background: var(--paper);
-  border-color: rgba(26, 22, 17, 0.16);
-  color: var(--ink);
-}
-.theme[data-theme="light"] .icon-btn:hover { background: var(--paper-dim); }
-.theme[data-theme="light"] .icon-btn.nav-back {
-  background: var(--paper);
-  border-color: rgba(26, 22, 17, 0.28);
-}
+
 .theme[data-theme="light"] .bottom-nav {
   background: var(--bg);
   border-top-color: rgba(26, 22, 17, 0.12);

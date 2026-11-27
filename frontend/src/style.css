@@ -91,19 +91,6 @@ body {
   line-height: 1;
 }
 .brand-mark-accent { color: var(--red-bright); }
-.header-left { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.icon-btn.nav-back {
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1;
-  padding-bottom: 3px;
-  color: var(--paper);
-  background: rgba(242,234,217,0.16);
-  border: 1px solid rgba(242,234,217,0.4);
-}
-.icon-btn.nav-back:hover { background: rgba(242,234,217,0.28); }
-.nav-back[hidden] { display: none; }
-
 /* Feste Hauptnavigation, im Aufnahme-Modus ausgeblendet. */
 .bottom-nav {
   position: fixed;
@@ -1154,7 +1141,7 @@ button, .anzahl-btn, .add-btn {
    ===================================================================== */
 
 a { color: inherit; }
-a.brand, a.letzte-aufnahme, a.hint, a.eintrag-link, a.detail-zurueck, a.status-btn, a.icon-btn, a.btn-link {
+a.brand, a.letzte-aufnahme, a.hint, a.eintrag-link, a.detail-zurueck, a.status-btn, a.btn-link {
   text-decoration: none;
 }
 a.letzte-aufnahme { color: inherit; display: block; position: relative; }
@@ -1163,12 +1150,6 @@ a.letzte-aufnahme { color: inherit; display: block; position: relative; }
 /* Header */
 .header-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: nowrap; }
 .logged-out .header-actions { display: none; }
-.icon-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px; border-radius: 50%; font-size: 20px;
-  background: rgba(242,234,217,0.08); border: none; cursor: pointer;
-}
-.icon-btn:hover { background: rgba(242,234,217,0.18); }
 .queue-badge {
   display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px;
   font-family: var(--font-display); font-weight: 700; font-size: var(--small);
