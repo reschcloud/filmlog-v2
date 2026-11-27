@@ -1,6 +1,6 @@
 import { api, errMsg, isOfflineError } from "../api";
 import { getCatalog, getDashboard, getFrameSuggestion } from "../lib/data";
-import { nowIsoLocal, nowTimeStr, todayStr } from "../lib/dates";
+import { formatDate, nowIsoLocal, nowTimeStr, todayStr } from "../lib/dates";
 import { clearDraft, loadDraft, saveDraft } from "../lib/draft";
 import { debounce, optionsHtml, qs, qsa, showError, toast, withBusy, type ToastAction } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
@@ -78,44 +78,54 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
       <div class="suggest-list" id="motifSuggest" hidden></div>
       <div class="chip-row motif-recent" id="motifRecent" hidden></div>
 
-      <div class="field-row field-row-objektiv">
-        <label>Objektiv
-          <select name="lens" id="lensSel"></select>
-        </label>
-        <div class="blitz-feld">
-          <label class="blitz-toggle">
-            <input type="checkbox" name="flash" id="flashChk">
-            Blitz
-          </label>
-        </div>
-      </div>
+      <p class="capture-when">
+        <span id="whenText"></span>
+        <button type="button" class="when-edit" id="whenEdit">ändern</button>
+      </p>
 
-      <div class="field-row field-row-pair">
-        <label>Belichtungszeit
-          <select name="shutter" id="shutterSel"></select>
-        </label>
-        <label>Blende
-          <select name="aperture" id="apertureSel"></select>
-        </label>
-      </div>
-
-      <label>Ort
-        <input type="text" name="place" id="placeInput" placeholder="wird per GPS ermittelt, bei Bedarf anpassen">
-        <span class="field-note" id="gpsStatus">GPS wird ermittelt …</span>
-        <span class="chip-row" id="placeChips"></span>
-      </label>
-
-      <div class="field-row">
-        <label>Datum
-          <input type="date" name="date" id="dateInput" required>
-        </label>
-        <label>Uhrzeit
-          <div class="uhrzeit-row">
-            <input type="time" name="time" id="timeInput" required>
-            <button type="button" class="now-btn" id="nowBtn" title="Aktuelles Datum &amp; Uhrzeit setzen">Jetzt</button>
+      <details class="frame-details" id="frameDetails">
+        <summary id="detailsSummary">Details</summary>
+        <div class="frame-details-body">
+          <div class="field-row field-row-objektiv">
+            <label>Objektiv
+              <select name="lens" id="lensSel"></select>
+            </label>
+            <div class="blitz-feld">
+              <label class="blitz-toggle">
+                <input type="checkbox" name="flash" id="flashChk">
+                Blitz
+              </label>
+            </div>
           </div>
-        </label>
-      </div>
+
+          <div class="field-row field-row-pair">
+            <label>Belichtungszeit
+              <select name="shutter" id="shutterSel"></select>
+            </label>
+            <label>Blende
+              <select name="aperture" id="apertureSel"></select>
+            </label>
+          </div>
+
+          <label>Ort
+            <input type="text" name="place" id="placeInput" placeholder="wird per GPS ermittelt, bei Bedarf anpassen">
+            <span class="field-note" id="gpsStatus">GPS wird ermittelt …</span>
+            <span class="chip-row" id="placeChips"></span>
+          </label>
+
+          <div class="field-row">
+            <label>Datum
+              <input type="date" name="date" id="dateInput">
+            </label>
+            <label>Uhrzeit
+              <div class="uhrzeit-row">
+                <input type="time" name="time" id="timeInput">
+                <button type="button" class="now-btn" id="nowBtn" title="Aktuelles Datum &amp; Uhrzeit setzen">Jetzt</button>
+              </div>
+            </label>
+          </div>
+        </div>
+      </details>
 
       <div class="save-bar">
         <div class="save-bar-inner">
@@ -152,7 +162,29 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const rollCount = qs(el, "#rollCount");
   const fullNote = qs(el, "#fullNote");
   const doneBtn = qs<HTMLButtonElement>(el, "#doneBtn");
+  const whenText = qs(el, "#whenText");
+  const whenEdit = qs<HTMLButtonElement>(el, "#whenEdit");
+  const frameDetails = qs<HTMLDetailsElement>(el, "#frameDetails");
+  const detailsSummary = qs(el, "#detailsSummary");
   const submits = qsa<HTMLButtonElement>(form, "button[type=submit]");
+
+  const updateWhen = () => {
+    whenText.textContent =
+      dateInput.value && timeInput.value
+        ? `${formatDate(dateInput.value)} · ${timeInput.value}`
+        : "Datum/Uhrzeit fehlen";
+  };
+  const updateDetailsSummary = () => {
+    const lens = lensSel.value ? (lensSel.selectedOptions[0]?.textContent ?? "Objektiv") : "kein Objektiv";
+    const parts = [lens, shutterSel.value || "Zeit offen", apertureSel.value || "Blende offen"];
+    if (flashChk.checked) parts.push("Blitz");
+    if (placeInput.value.trim()) parts.push(placeInput.value.trim());
+    detailsSummary.textContent = `Details · ${parts.join(" · ")}`;
+  };
+  whenEdit.onclick = () => {
+    frameDetails.open = true;
+    dateInput.focus();
+  };
 
   const rollCounts = new Map<number, number>();
   for (const r of dash.open_rolls) rollCounts.set(r.number, r.frame_count + (queued.get(r.number) ?? 0));
@@ -192,6 +224,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const setNow = () => {
     dateInput.value = todayStr();
     timeInput.value = nowTimeStr();
+    updateWhen();
   };
   setNow();
   if (draft?.date) {
@@ -202,6 +235,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     timeInput.value = draft.time;
     dtTouched = true;
   }
+  updateWhen();
   dateInput.addEventListener("input", () => (dtTouched = true));
   timeInput.addEventListener("input", () => (dtTouched = true));
   qs(el, "#nowBtn").onclick = () => {
@@ -317,6 +351,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     if (!apertureTouched) fillSelect(apertureSel, apertureLabels, s?.aperture ?? null);
     lastMotif = s?.motif ?? null;
     updateMotifRecent();
+    updateDetailsSummary();
   }
 
   fillLenses(null);
@@ -333,6 +368,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     shutterTouched = true;
     apertureTouched = true;
   }
+  updateDetailsSummary();
   rollSel.onchange = () => {
     lensTouched = false;
     shutterTouched = false;
@@ -402,6 +438,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const setPlace = (text: string, auto: boolean) => {
     placeInput.value = text;
     autoPlace = auto ? text : "";
+    updateDetailsSummary();
   };
   placeInput.addEventListener("input", () => (autoPlace = ""));
 
@@ -457,7 +494,10 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     ev.preventDefault();
     const roll = Number(rollSel.value);
     if (!roll) return showError(form, "Bitte einen Film auswählen.");
-    if (!dateInput.value || !timeInput.value) return showError(form, "Bitte Datum und Uhrzeit angeben.");
+    if (!dateInput.value || !timeInput.value) {
+      frameDetails.open = true;
+      return showError(form, "Bitte Datum und Uhrzeit angeben.");
+    }
     const count = Math.min(50, Math.max(1, parseInt(countInput.value, 10) || 1));
     const submittedAt = nowIsoLocal();
     const payload: CreateFramePayload = {
@@ -581,7 +621,27 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     time: timeInput.value,
     count: countInput.value,
   });
-  const persistDraft = () => saveDraft(DRAFT_KEY, draftData());
+  const persistDraft = () => {
+    saveDraft(DRAFT_KEY, draftData());
+    updateWhen();
+    updateDetailsSummary();
+  };
   form.addEventListener("input", persistDraft);
   form.addEventListener("change", persistDraft);
+
+  // Auf iOS liegt eine fixe Leiste sonst hinter der Tastatur.
+  const vv = window.visualViewport;
+  const updateKeyboardOffset = () => {
+    if (!ctx.alive()) {
+      vv?.removeEventListener("resize", updateKeyboardOffset);
+      vv?.removeEventListener("scroll", updateKeyboardOffset);
+      document.documentElement.style.removeProperty("--keyboard-offset");
+      return;
+    }
+    const offset = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+    document.documentElement.style.setProperty("--keyboard-offset", `${offset}px`);
+  };
+  vv?.addEventListener("resize", updateKeyboardOffset);
+  vv?.addEventListener("scroll", updateKeyboardOffset);
+  updateKeyboardOffset();
 }

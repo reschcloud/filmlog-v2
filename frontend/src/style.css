@@ -140,7 +140,9 @@ body {
 .nav-alert[hidden] { display: none; }
 .nav-visible #app { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
 .nav-visible .toasts { bottom: calc(74px + env(safe-area-inset-bottom)); }
-.capture-mode .toasts { bottom: calc(140px + env(safe-area-inset-bottom)); }
+.capture-mode .toasts {
+  bottom: calc(140px + var(--keyboard-offset, 0px) + env(safe-area-inset-bottom));
+}
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -571,13 +573,59 @@ body {
   appearance: none;
 }
 
+/* Aufnahmeformular: drei sichtbare Entscheidungen, Rest in Details. */
+.capture-when {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -2px 0 0;
+  font-family: var(--font-serif);
+  font-size: var(--medium);
+  color: var(--ink-soft);
+}
+.when-edit {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--small);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--red-dim);
+}
+.frame-details { border-top: 1px solid var(--paper-dim); padding-top: 4px; }
+.frame-details summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--small);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  list-style: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.frame-details summary::-webkit-details-marker { display: none; }
+.frame-details summary::before { content: "▸ "; color: var(--red-dim); flex-shrink: 0; }
+.frame-details[open] summary::before { content: "▾ "; }
+.frame-details-body { display: flex; flex-direction: column; gap: 16px; padding-top: 6px; }
+
 /* Speicherleiste bleibt im Aufnahmeformular immer im Daumenbereich. */
 .frame-form { padding-bottom: 150px; }
 .save-bar {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: var(--keyboard-offset, 0px);
   z-index: 40;
   background: var(--paper);
   border-top: 1px solid var(--paper-dim);
