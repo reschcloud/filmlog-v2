@@ -26,6 +26,20 @@ function rollCardHtml(r: Roll, queued: number): string {
     </div>`;
 }
 
+/** Filme, die auf Entwicklung warten: eine Summe, aufgeteilt nur nach S/W und Farbe. */
+function developCardHtml(t: Dashboard["to_develop"]): string {
+  if (!t.total) return "";
+  const parts = [t.farbe ? `Farbe ${t.farbe}` : "", t.sw ? `S/W ${t.sw}` : ""].filter(Boolean);
+  return `
+    <a class="develop-card" href="#filme">
+      <div class="develop-info">
+        <div class="develop-title">Zu entwickeln</div>
+        ${parts.length ? `<div class="develop-detail">${parts.join(" · ")}</div>` : ""}
+      </div>
+      <div class="develop-count">${t.total} <span class="develop-unit">${t.total === 1 ? "Film" : "Filme"}</span></div>
+    </a>`;
+}
+
 function lastFrameHtml(d: Dashboard): string {
   const f = d.last_frame;
   if (!f) return "";
@@ -64,21 +78,19 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
   if (!ctx.alive()) return;
 
   const hints = d.hints
-    .filter((h) => h.kind !== "voll" && h.kind !== "lange_in_kamera")
+    .filter((h) => h.kind === "abgelaufen")
     .map((h) => `<a class="hint hint-${escapeHtml(h.kind)}" href="#film/${h.roll_number}">${escapeHtml(h.text)}</a>`)
     .join("");
 
   top.innerHTML = `
     ${result.stale ? `<p class="offline-note">Offline – zuletzt geladene Daten.</p>` : ""}
-    <div class="section-head">
-      <p class="dashboard-label">Offene Filme</p>
-      <a class="text-link" href="#neuer-film">+ Neuer Film</a>
-    </div>
+    <p class="dashboard-label">Offene Filme</p>
     ${
       d.open_rolls.length
         ? `<div class="dashboard-grid">${d.open_rolls.map((r) => rollCardHtml(r, queued.get(r.number) ?? 0)).join("")}</div>`
         : `<p class="empty-state">Noch kein aktiver Film.</p>`
     }
+    ${developCardHtml(d.to_develop)}
     ${hints ? `<div class="hint-list">${hints}</div>` : ""}
     ${lastFrameHtml(d)}`;
 

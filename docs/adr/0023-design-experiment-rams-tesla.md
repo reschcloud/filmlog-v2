@@ -31,7 +31,10 @@ Gesten) erhalten.
 - Unwichtiges wird aus dem Markup entfernt (z. B. erklärende Mini-Hints, dekorative Linien), nicht
   verkleinert.
 - **Startseite:** keine separate „zuletzt genutzte Kamera“-Karte und kein Hero. Eine einzige, nach zuletzt
-  genutzt sortierte Liste der offenen Filme; alle offenen Filme tragen das orange Flächenschema.
+  genutzt sortierte Liste der offenen Filme; alle offenen Filme tragen das orange Flächenschema. Filme, die
+  auf Entwicklung warten, erscheinen darunter als **eine Summe** (Gesamtzahl, aufgeteilt nur nach S/W und
+  Farbe) statt einzelner Hinweise. „Neuer Film“ wird dort nicht angeboten; die Anlage liegt unter
+  Mehr → Neuer Film.
 - **Aufnahme:** Motivvorschläge liegen absolut über dem Formular (kein Layoutsprung); ein Tap auf
   „Aufnahme speichern“ bei offener Vorschlagsliste wird bereits am Pointerdown abgefangen und speichert.
 - **Details-Zeile:** zeigt nur tatsächlich gesetzte Werte (kein „kein Objektiv“, „Blende offen“ o. Ä.).

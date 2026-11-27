@@ -261,13 +261,46 @@
 .theme .dashboard-card:hover { background: var(--amber-bright); }
 .theme .dashboard-card:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .theme .dashboard-typ-ecke { display: none; }
-.theme .dashboard-kamera { color: var(--ink); font-size: var(--large); }
+.theme .dashboard-kamera { color: var(--ink); font-size: 21px; }
 .theme .dashboard-film { color: var(--ink); font-size: var(--medium); }
 .theme .dashboard-details { color: var(--ink); font-size: var(--medium); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
-.theme .dashboard-count { color: var(--ink); font-size: 32px; }
+.theme .dashboard-count { color: var(--ink); font-size: 28px; }
 .theme .dashboard-max { color: rgba(26, 22, 17, 0.65); }
 .theme .dashboard-fill-track { background: rgba(26, 22, 17, 0.25); }
 .theme .dashboard-fill-bar { background: var(--ink); }
+
+.theme .develop-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 12px 0 8px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: var(--bg-soft);
+  border: 1px solid rgba(241, 236, 226, 0.12);
+  color: var(--paper);
+  text-decoration: none;
+}
+.theme .develop-card:hover { background: #2a221b; }
+.theme .develop-card:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.theme .develop-title { font-size: var(--medium); font-weight: 600; }
+.theme .develop-detail { margin-top: 2px; font-size: var(--small); color: var(--muted); }
+.theme .develop-count {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1;
+  text-align: right;
+}
+.theme .develop-unit {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--small);
+  font-weight: 400;
+  color: var(--muted);
+}
 
 .theme .dashboard-card .ablauf-pille { background: var(--red-dim); color: var(--paper); }
 .theme .hint {
@@ -859,6 +892,14 @@
 .theme[data-theme="light"] .more-item { color: var(--ink); }
 .theme[data-theme="light"] .more-item:hover { background: var(--paper-dim); }
 .theme[data-theme="light"] .dashboard-card { color: var(--ink); }
+.theme[data-theme="light"] .develop-card {
+  background: var(--bg-soft);
+  color: var(--ink);
+  border-color: rgba(26, 22, 17, 0.08);
+}
+.theme[data-theme="light"] .develop-card:hover { background: var(--paper-dim); }
+.theme[data-theme="light"] .develop-detail,
+.theme[data-theme="light"] .develop-unit { color: var(--ink-soft); }
 .theme[data-theme="light"] .dashboard-details { color: var(--ink); }
 .theme[data-theme="light"] .dashboard-card .ablauf-pille { background: var(--red-dim); color: var(--paper); }
 .theme[data-theme="light"] .cat-delete { color: var(--red-dim); border-color: var(--red-dim); }
