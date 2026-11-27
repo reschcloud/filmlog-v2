@@ -77,6 +77,7 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
   let formDirty = false;
   let metaDirty = false;
   let activeDraftKey: string | null = null;
+  const metaKey = `${META_DRAFT}:${number}`;
   let scrollTo: { position: number; center: boolean } | null = null;
 
   const wanted = parseInt(ctx.params[1] ?? "", 10);
@@ -116,27 +117,22 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
 
   function frameRowHtml(f: Frame, pos: number): string {
     const hl = scrollTo && scrollTo.position === f.position && readOnly() ? " eintrag-highlight" : "";
+    const editable = !readOnly();
     return `
-      <div class="eintrag${hl}" data-pos="${f.position}">
+      <div class="eintrag${hl}${editable ? " eintrag-klickbar" : ""}" data-pos="${f.position}"${
+        editable ? ` tabindex="0" role="button" aria-label="Aufnahme ${pos} bearbeiten"` : ""
+      }>
         <div class="eintrag-nr">${pos}</div>
         <div class="eintrag-info">
           <div class="eintrag-motiv">${f.motif ? escapeHtml(f.motif) : "(kein Motiv)"}</div>
           <div class="eintrag-meta">${frameMetaHtml(f)}</div>
         </div>
         ${
-          readOnly()
-            ? ""
-            : `<div class="eintrag-aktionen">
-          <button type="button" class="eintrag-edit-btn" data-act="edit" data-pos="${pos}" title="Bearbeiten" aria-label="Aufnahme ${pos} bearbeiten">✏️</button>
-          <button type="button" class="eintrag-del-btn" data-act="del" data-pos="${pos}" title="Löschen" aria-label="Aufnahme ${pos} löschen">🗑️</button>
-        </div>`
+          editable
+            ? `<button type="button" class="eintrag-insert-btn" data-act="insert" data-pos="${pos + 1}" title="Danach einfügen" aria-label="Nach Aufnahme ${pos} einfügen">+</button>`
+            : ""
         }
       </div>`;
-  }
-
-  function slotHtml(pos: number): string {
-    const text = roll.frames.length === 0 ? "+ Aufnahme hinzufügen" : "+";
-    return `<button type="button" class="eintrag-plus" data-act="insert" data-pos="${pos}" title="Hier einfügen" aria-label="Hier als Nr. ${pos} einfügen">${text}</button>`;
   }
 
   function formHtml(typ: "edit" | "insert", pos: number): string {
@@ -166,6 +162,7 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
           <button type="submit" class="btn-primary">Speichern</button>
           <button type="button" class="eintrag-abbrechen-btn" data-act="cancel">Abbrechen</button>
         </div>
+        ${typ === "edit" ? `<button type="button" class="eintrag-delete-btn" data-act="del-form">Aufnahme löschen</button>` : ""}
       </form>`;
   }
 
@@ -277,13 +274,14 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       html += roll.frames.map((f) => frameRowHtml(f, f.position)).join("");
       if (!roll.frames.length) html += `<p class="empty-state">Keine Aufnahmen.</p>`;
     } else {
-      for (let pos = 1; pos <= total + 1; pos++) {
-        html += mode && mode.typ === "insert" && mode.position === pos ? formHtml("insert", pos) : slotHtml(pos);
+      for (let pos = 1; pos <= total; pos++) {
+        if (mode?.typ === "insert" && mode.position === pos) html += formHtml("insert", pos);
         const f = roll.frames[pos - 1];
         if (f) {
-          html += mode && mode.typ === "edit" && mode.position === pos ? formHtml("edit", pos) : frameRowHtml(f, pos);
+          html += mode?.typ === "edit" && mode.position === pos ? formHtml("edit", pos) : frameRowHtml(f, pos);
         }
       }
+      if (mode?.typ === "insert" && mode.position === total + 1) html += formHtml("insert", total + 1);
     }
     html += `</div>`;
     el.innerHTML = html;
@@ -292,13 +290,24 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
 
   function bind(): void {
     activeDraftKey = null;
-    const canSwitch = (): boolean => {
+    const canSwitchFrame = (): boolean => {
       if (!formDirty) return true;
       if (!confirm("Nicht gespeicherte Änderungen verwerfen?")) return false;
       if (activeDraftKey) clearDraft(activeDraftKey);
       formDirty = false;
       activeDraftKey = null;
       return true;
+    };
+    const canSwitch = (): boolean => {
+      if (metaOpen && metaDirty) {
+        if (!confirm("Nicht gespeicherte Filmangaben verwerfen?")) return false;
+        clearDraft(metaKey);
+        metaDirty = false;
+        metaOpen = false;
+      } else if (metaOpen) {
+        metaOpen = false;
+      }
+      return canSwitchFrame();
     };
 
     const statusBtn = el.querySelector<HTMLButtonElement>("[data-act=status]");
@@ -334,14 +343,20 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       };
     }
 
-    const metaKey = `${META_DRAFT}:${number}`;
     const metaBtn = el.querySelector<HTMLButtonElement>("[data-act=meta]");
     if (metaBtn) {
       metaBtn.onclick = () => {
-        if (metaOpen && metaDirty && !confirm("Nicht gespeicherte Filmangaben verwerfen?")) return;
-        if (metaOpen) clearDraft(metaKey);
-        metaDirty = false;
-        metaOpen = !metaOpen;
+        if (metaOpen) {
+          if (metaDirty && !confirm("Nicht gespeicherte Filmangaben verwerfen?")) return;
+          clearDraft(metaKey);
+          metaDirty = false;
+          metaOpen = false;
+          paint();
+          return;
+        }
+        if (!canSwitchFrame()) return;
+        mode = null;
+        metaOpen = true;
         paint();
       };
     }
@@ -399,18 +414,29 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
     }
 
     qsa<HTMLButtonElement>(el, "button[data-act=insert]").forEach((b) => {
-      b.onclick = () => {
+      b.onclick = (ev) => {
+        ev.stopPropagation();
         if (!canSwitch()) return;
         mode = { typ: "insert", position: Number(b.dataset.pos) };
         paint();
       };
     });
-    qsa<HTMLButtonElement>(el, "button[data-act=edit]").forEach((b) => {
-      b.onclick = () => {
+    qsa<HTMLElement>(el, ".eintrag-klickbar").forEach((row) => {
+      const open = () => {
         if (!canSwitch()) return;
-        mode = { typ: "edit", position: Number(b.dataset.pos) };
+        mode = { typ: "edit", position: Number(row.dataset.pos) };
         paint();
       };
+      row.addEventListener("click", (ev) => {
+        if ((ev.target as HTMLElement).closest("button")) return;
+        open();
+      });
+      row.addEventListener("keydown", (ev) => {
+        if ((ev.key === "Enter" || ev.key === " ") && ev.target === row) {
+          ev.preventDefault();
+          open();
+        }
+      });
     });
     qsa<HTMLButtonElement>(el, "button[data-pending]").forEach((b) => {
       b.onclick = async () => {
@@ -424,25 +450,6 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
             const y = window.scrollY;
             paint();
             window.scrollTo(0, y);
-          } catch (e) {
-            toast(errMsg(e), "error");
-          }
-        });
-      };
-    });
-
-    qsa<HTMLButtonElement>(el, "button[data-act=del]").forEach((b) => {
-      b.onclick = async () => {
-        const pos = Number(b.dataset.pos);
-        const f = roll.frames[pos - 1];
-        if (!f) return;
-        const name = f.motif || `Aufnahme ${pos}`;
-        if (!confirm(`„${name}“ (Nr. ${pos}) wirklich löschen? Die folgenden Aufnahmen rücken nach.`)) return;
-        await withBusy(b, async () => {
-          try {
-            await api.del(`/api/v2/frames/${f.id}`);
-            mode = null;
-            await reload();
           } catch (e) {
             toast(errMsg(e), "error");
           }
@@ -503,6 +510,27 @@ export async function renderRollDetail(ctx: ViewContext): Promise<void> {
       mode = null;
       paint();
     };
+    const delForm = form.querySelector<HTMLButtonElement>("[data-act=del-form]");
+    if (delForm) {
+      delForm.onclick = async () => {
+        const frame = roll.frames[pos - 1];
+        if (!frame) return;
+        const name = frame.motif || `Aufnahme ${pos}`;
+        if (!confirm(`„${name}“ (Nr. ${pos}) wirklich löschen? Die folgenden Aufnahmen rücken nach.`)) return;
+        await withBusy(delForm, async () => {
+          try {
+            await api.del(`/api/v2/frames/${frame.id}`);
+            clearDraft(draftKey);
+            formDirty = false;
+            activeDraftKey = null;
+            mode = null;
+            await reload();
+          } catch (e) {
+            toast(errMsg(e), "error");
+          }
+        });
+      };
+    }
     form.onsubmit = async (ev) => {
       ev.preventDefault();
       const f = form.elements;

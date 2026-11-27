@@ -879,30 +879,37 @@ button, .anzahl-btn, .add-btn {
 .eintrag-edit-btn:hover, .eintrag-del-btn:hover { background: var(--paper-dim); }
 
 /* Einfüge-Streifen zwischen den Aufnahmen */
-.eintrag-plus {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-height: 44px;
+.eintrag-klickbar { cursor: pointer; }
+.eintrag-insert-btn {
+  flex-shrink: 0;
+  width: 44px;
   height: 44px;
-  padding: 0;
+  border-radius: 50%;
   background: none;
-  border: none;
+  border: 1px dashed var(--paper-dim);
+  color: var(--ink-soft);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--large);
+  font-size: 22px;
   line-height: 1;
-  color: var(--muted);
-  opacity: 0.75;
   cursor: pointer;
 }
-.eintrag-plus::before, .eintrag-plus::after {
-  content: "";
-  flex: 1;
-  border-top: 1px dashed rgba(242, 234, 217, 0.35);
+.eintrag-insert-btn:hover { color: var(--red-dim); border-color: var(--red-dim); }
+.eintrag-delete-btn {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 8px 14px;
+  background: none;
+  border: 1px solid var(--red-dim);
+  border-radius: 999px;
+  color: var(--red-dim);
+  font-family: var(--font-display);
+  font-size: var(--small);
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
 }
-.eintrag-plus:hover { color: var(--amber); opacity: 1; }
+.eintrag-delete-btn:hover { background: var(--red-dim); color: var(--paper); }
 
 /* Inline-Formular (Bearbeiten/Einfügen) nutzt das Karten-Layout, aber ohne roten Rand/Schatten */
 .eintrag-form {
