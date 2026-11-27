@@ -26,6 +26,8 @@ für fünf seltene Objektaktionen zu viel gelerntes Vokabular wäre.
   Aktionsicon.
 - **Kein eigener SVG-Iconsatz und keine Emojis.** Systemschrift-Glyphen und Emojis rendern je nach Gerät
   anders; Wörter sind plattformunabhängig.
+- **Informationszeichen sind keine Aktionsicons:** Der Standort-Pin und der runde Farb-/S/W-Marker zeigen
+  einen Zustand, keine Aktion. Sie tragen ein `aria-label` und bleiben erlaubt.
 - **Vier Wörter werden getrennt:**
   - *Löschen* entfernt Gespeichertes, nur am Objekt und mit Rückfrage.
   - *Verwerfen* gibt Ungespeichertes auf (Formular, Offline-Queue).

@@ -5,7 +5,7 @@ import { qs, qsa } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { navigate } from "../lib/nav";
 import { queuedFramesByRoll } from "../lib/queue";
-import { expiryPillHtml, fillBarHtml, typeCornerHtml } from "../lib/ui";
+import { expiryPillHtml, fillBarHtml, typeBadgeHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Dashboard, Roll } from "../types";
 
@@ -13,7 +13,7 @@ function rollCardHtml(r: Roll, queued: number): string {
   const count = r.frame_count + queued;
   return `
     <div class="dashboard-card" data-roll="${r.number}" tabindex="0" role="button" aria-label="Film #${r.number} – neue Aufnahme">
-      ${typeCornerHtml(r.film_stock.type)}
+      ${typeBadgeHtml(r.film_stock.type)}
       <div class="dashboard-info">
         <div class="dashboard-kamera">${escapeHtml(r.camera.name)}</div>
         <div class="dashboard-film">#${r.number} · ${escapeHtml(r.film_stock.name)} ${expiryPillHtml(r.expired_years)}</div>
@@ -48,7 +48,6 @@ function lastFrameHtml(d: Dashboard): string {
   return `
     <p class="dashboard-label">Zuletzt${fresh ? ` <span class="frisch-text">neu</span>` : ""}</p>
     <a class="frame letzte-aufnahme" href="#zuletzt">
-      ${typeCornerHtml(f.roll.type)}
       <div>
         ${f.motif ? `<div class="frame-motiv">${escapeHtml(f.motif)}</div>` : ""}
         <div class="frame-film">${escapeHtml(f.roll.camera_name)} · #${f.roll_number} · Nr. ${f.position}</div>

@@ -48,6 +48,13 @@ export function typeCornerHtml(type: FilmType | string | null | undefined): stri
   return "";
 }
 
+/** Runder Typ-Marker in der Ecke: konzentrisch zum Kartenradius. */
+export function typeBadgeHtml(type: FilmType | string | null | undefined): string {
+  if (type !== "sw" && type !== "farbe" && type !== "dia") return "";
+  const label = TYPE_LABELS[type];
+  return `<span class="type-badge type-badge-${type}" role="img" aria-label="${label}" title="${label}"></span>`;
+}
+
 export function expiryPillHtml(years: number): string {
   if (!years || years <= 0) return "";
   return `<span class="ablauf-pille">${years} Jahr${years === 1 ? "" : "e"} abgelaufen</span>`;
