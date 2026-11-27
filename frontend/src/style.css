@@ -75,13 +75,13 @@ body {
 
 .brand {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
+  align-items: center;
+  gap: 8px;
   min-height: 44px;
   color: inherit;
   padding: 0;
 }
+.brand-icon { flex: none; }
 .brand-mark {
   font-family: var(--font-display);
   font-weight: 700;
