@@ -41,6 +41,7 @@ Umsetzung; bei Widersprüchen gilt die neuere ADR.
 | [0022](0022-field-typografie-und-zurueck.md) | Mindestgrößen für Feldtexte und ein deutlich sichtbarer Zurück-Button. | Accepted |
 | [0023](0023-design-experiment-rams-tesla.md) | Design „Rams × Tesla“: orange Filmliste, große Typografie, reduzierte Flächen. | Accepted |
 | [0024](0024-zeichen-nur-fuer-richtung.md) | Zeichen nur für Richtung/native Bedienung; Objektaktionen als deutsche Verben, kein Icon-Satz. | Accepted |
+| [0025](0025-light-mode.md) | Light Mode als gespeicherte Darstellung; Dunkel bleibt Standard. | Accepted |
 
 ## Vorlage
 

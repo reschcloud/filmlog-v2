@@ -5,6 +5,7 @@ import { formatDateTime } from "../lib/dates";
 import { qs, qsa, setErrorState, showError, toast, withBusy } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { queueCount } from "../lib/queue";
+import { applyTheme, type Theme } from "../lib/theme";
 import type { ViewContext } from "../lib/view";
 import type { ImportReport, NewToken, TokenInfo } from "../types";
 
@@ -53,6 +54,14 @@ export function renderSettings(ctx: ViewContext): void {
   el.innerHTML = `
     <h1 class="view-title">Einstellungen</h1>
 
+    <p class="dashboard-label">Darstellung</p>
+    <div class="card">
+      <div class="theme-switch" role="group" aria-label="Darstellung">
+        <button type="button" class="theme-option" data-theme-value="dark">Dunkel</button>
+        <button type="button" class="theme-option" data-theme-value="light">Hell</button>
+      </div>
+    </div>
+
     <p class="dashboard-label">Passwort ändern</p>
     <form class="card" id="pwForm" autocomplete="off">
       <label>Aktuelles Passwort<input type="password" name="current" autocomplete="current-password" required></label>
@@ -93,6 +102,22 @@ export function renderSettings(ctx: ViewContext): void {
       <p class="field-note">Version ${__APP_VERSION__}</p>
       <button type="button" class="status-btn status-btn-back" id="logoutBtn">Abmelden</button>
     </div>`;
+
+  // ---- Darstellung ----
+  const themeButtons = qsa<HTMLButtonElement>(el, ".theme-option");
+  const markTheme = () =>
+    themeButtons.forEach((b) => {
+      const active = b.dataset.themeValue === document.documentElement.dataset.theme;
+      b.classList.toggle("aktiv", active);
+      b.setAttribute("aria-pressed", String(active));
+    });
+  themeButtons.forEach((b) => {
+    b.onclick = () => {
+      applyTheme(b.dataset.themeValue as Theme);
+      markTheme();
+    };
+  });
+  markTheme();
 
   // ---- Abmelden ----
   const logoutBtn = qs<HTMLButtonElement>(el, "#logoutBtn");

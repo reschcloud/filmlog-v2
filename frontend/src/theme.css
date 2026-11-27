@@ -4,6 +4,7 @@
    ========================================================================== */
 
 .theme {
+  color-scheme: dark;
   --bg: #17130f;
   --bg-soft: #211b15;
   --paper: #f1ece2;
@@ -583,6 +584,30 @@
 
 /* ---- Login ---- */
 .theme .login-view { max-width: 420px; }
+.theme-switch {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--paper-dim);
+}
+.theme-option {
+  flex: 1;
+  min-height: 44px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: var(--medium);
+  font-weight: 600;
+  cursor: pointer;
+}
+.theme-option.aktiv {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
 .theme .check-label { color: var(--ink-soft); font-size: var(--medium); }
 .theme .blitz-toggle { font-size: var(--medium); color: var(--ink); }
 .theme .check-label input[type="checkbox"],
@@ -694,3 +719,173 @@
   .theme .frame-form { margin-bottom: 0; }
   .theme .capture-mode .toasts { bottom: calc(20px + env(safe-area-inset-bottom)); }
 }
+
+/* ==========================================================================
+   Light Mode
+   ========================================================================== */
+.theme[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3eee4;
+  --bg-soft: #e8dfd0;
+  --paper: #fffdf8;
+  --paper-dim: #e2d6c4;
+  --ink: #1a1611;
+  --ink-soft: #5f5548;
+  --muted: #6b6155;
+  --red: #b23c2a;
+  --red-dim: #7c2a1e;
+  --red-bright: #a33a24;
+  --amber: #d96f3a;
+  --amber-dim: #8f3f1d;
+  --amber-bright: #e08a5a;
+}
+
+.theme[data-theme="light"] body { background: var(--bg); color: var(--ink); }
+.theme[data-theme="light"] .app-header {
+  background: var(--bg);
+  border-bottom-color: rgba(26, 22, 17, 0.12);
+}
+.theme[data-theme="light"] .brand-mark { color: var(--ink); }
+.theme[data-theme="light"] .brand-mark-accent { color: var(--amber-dim); }
+.theme[data-theme="light"] .view-title,
+.theme[data-theme="light"] .detail-title,
+.theme[data-theme="light"] .detail-title .dashboard-typ-ecke { color: var(--ink); }
+.theme[data-theme="light"] .icon-btn {
+  background: var(--paper);
+  border-color: rgba(26, 22, 17, 0.16);
+  color: var(--ink);
+}
+.theme[data-theme="light"] .icon-btn:hover { background: var(--paper-dim); }
+.theme[data-theme="light"] .icon-btn.nav-back {
+  background: var(--paper);
+  border-color: rgba(26, 22, 17, 0.28);
+}
+.theme[data-theme="light"] .bottom-nav {
+  background: var(--bg);
+  border-top-color: rgba(26, 22, 17, 0.12);
+}
+.theme[data-theme="light"] .bottom-nav a { color: var(--ink-soft); }
+.theme[data-theme="light"] .bottom-nav a.aktiv {
+  color: var(--amber-dim);
+  background: rgba(217, 111, 58, 0.14);
+}
+.theme[data-theme="light"] .net-badge { color: var(--red-dim); }
+.theme[data-theme="light"] .net-badge::before {
+  background: var(--red-dim);
+  box-shadow: 0 0 0 2px rgba(26, 22, 17, 0.12);
+}
+.theme[data-theme="light"] .card { border: 1px solid rgba(26, 22, 17, 0.06); }
+.theme[data-theme="light"] .card.filter-sticky {
+  background: var(--bg-soft);
+  border-color: rgba(26, 22, 17, 0.08);
+}
+.theme[data-theme="light"] .card.filter-sticky select,
+.theme[data-theme="light"] .card.filter-sticky input {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: rgba(26, 22, 17, 0.15);
+}
+.theme[data-theme="light"] .eintrag,
+.theme[data-theme="light"] .download-row,
+.theme[data-theme="light"] .hint,
+.theme[data-theme="light"] .more-item,
+.theme[data-theme="light"] .cat-row,
+.theme[data-theme="light"] .cat-section,
+.theme[data-theme="light"] .stats-karte,
+.theme[data-theme="light"] .letzte-aufnahme {
+  background: var(--bg-soft);
+  color: var(--ink);
+  border-color: rgba(26, 22, 17, 0.08);
+}
+.theme[data-theme="light"] .eintrag-motiv,
+.theme[data-theme="light"] .eintrag-film,
+.theme[data-theme="light"] .download-row-title,
+.theme[data-theme="light"] .cat-title,
+.theme[data-theme="light"] .stats-name,
+.theme[data-theme="light"] .stats-gesamt,
+.theme[data-theme="light"] .dist-label,
+.theme[data-theme="light"] .month-val,
+.theme[data-theme="light"] .frame-motiv,
+.theme[data-theme="light"] .frame-film,
+.theme[data-theme="light"] .eintraege-liste { color: var(--ink); }
+.theme[data-theme="light"] .eintrag-nr { color: var(--amber-dim); }
+.theme[data-theme="light"] .eintrag-meta,
+.theme[data-theme="light"] .download-row-meta,
+.theme[data-theme="light"] .cat-sub,
+.theme[data-theme="light"] .cat-count,
+.theme[data-theme="light"] .frame-meta,
+.theme[data-theme="light"] .failed-meta,
+.theme[data-theme="light"] .month-label { color: var(--ink-soft); }
+.theme[data-theme="light"] .hint:hover,
+.theme[data-theme="light"] .more-item:hover,
+.theme[data-theme="light"] .download-row-klickbar:hover,
+.theme[data-theme="light"] .eintrag-link:hover { background: var(--paper-dim); }
+.theme[data-theme="light"] .detail-csv-btn {
+  color: var(--ink);
+  border-color: rgba(26, 22, 17, 0.25);
+}
+.theme[data-theme="light"] .detail-csv-btn:hover { background: var(--paper-dim); }
+.theme[data-theme="light"] .detail-del-btn { color: var(--red-dim); border-color: var(--red-dim); }
+.theme[data-theme="light"] .detail-del-btn:hover { background: var(--red-dim); color: var(--paper); }
+.theme[data-theme="light"] .detail-actions .status-btn-back,
+.theme[data-theme="light"] .roll-actions .status-btn-back,
+.theme[data-theme="light"] .preset-row .status-btn-back {
+  color: var(--amber-dim);
+  border-color: rgba(26, 22, 17, 0.25);
+}
+.theme[data-theme="light"] .detail-actions .status-btn-back:hover,
+.theme[data-theme="light"] .roll-actions .status-btn-back:hover,
+.theme[data-theme="light"] .preset-row .status-btn-back:hover {
+  background: rgba(26, 22, 17, 0.06);
+  color: var(--ink);
+}
+.theme[data-theme="light"] .detail-actions button.status-btn:not(.status-btn-back):not(.status-btn-primary) {
+  color: var(--ink);
+  border-color: rgba(26, 22, 17, 0.25);
+}
+.theme[data-theme="light"] .detail-actions button.status-btn:not(.status-btn-back):not(.status-btn-primary):hover {
+  background: var(--paper-dim);
+  color: var(--ink);
+}
+.theme[data-theme="light"] .cat-section summary { color: var(--amber-dim); }
+.theme[data-theme="light"] .cat-section summary::before { color: var(--amber-dim); }
+.theme[data-theme="light"] .result-card {
+  background: var(--bg-soft);
+  color: var(--ink);
+  border-color: rgba(26, 22, 17, 0.15);
+}
+.theme[data-theme="light"] .result-card .field-note { color: var(--ink-soft); }
+.theme[data-theme="light"] .eintrag-verwerfen-btn { color: var(--red-dim); border-color: var(--red-dim); }
+.theme[data-theme="light"] .eintrag-pending {
+  border-color: var(--amber-dim);
+  background: rgba(217, 111, 58, 0.08);
+}
+.theme[data-theme="light"] .text-link,
+.theme[data-theme="light"] .roll-details,
+.theme[data-theme="light"] .frisch-text { color: var(--amber-dim); }
+.theme[data-theme="light"] .segmented.stats-tabs { background: var(--paper-dim); }
+.theme[data-theme="light"] .stats-tab { color: var(--ink-soft); }
+.theme[data-theme="light"] .stats-tab:hover { color: var(--ink); background: rgba(26, 22, 17, 0.04); }
+.theme[data-theme="light"] .stats-tab.aktiv {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: rgba(26, 22, 17, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.theme[data-theme="light"] .stats-gesamt span { color: var(--amber-dim); }
+.theme[data-theme="light"] .stats-zeile + .stats-zeile { border-top-color: rgba(26, 22, 17, 0.08); }
+.theme[data-theme="light"] .stats-bar,
+.theme[data-theme="light"] .dist-track { background: rgba(26, 22, 17, 0.12); }
+.theme[data-theme="light"] .stats-bar-fill,
+.theme[data-theme="light"] .dist-fill,
+.theme[data-theme="light"] .month-bar { background: var(--amber-dim); }
+.theme[data-theme="light"] .stats-more { border-color: rgba(26, 22, 17, 0.15); }
+.theme[data-theme="light"] .stats-more summary { color: var(--ink-soft); }
+.theme[data-theme="light"] .stats-more summary::before { color: var(--amber-dim); }
+.theme[data-theme="light"] .more-item { color: var(--ink); }
+.theme[data-theme="light"] .more-item:hover { background: var(--paper-dim); }
+.theme[data-theme="light"] .dashboard-card { color: var(--ink); }
+.theme[data-theme="light"] .dashboard-details { color: var(--ink); }
+.theme[data-theme="light"] .dashboard-card .ablauf-pille { background: var(--red-dim); color: var(--paper); }
+.theme[data-theme="light"] .cat-delete { color: var(--red-dim); border-color: var(--red-dim); }
+.theme[data-theme="light"] .cat-delete:hover { background: var(--red-dim); color: var(--paper); }

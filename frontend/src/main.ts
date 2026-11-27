@@ -3,6 +3,7 @@ import "./theme.css";
 import { registerSW } from "virtual:pwa-register";
 import { setUnauthorizedHandler } from "./api";
 import { fetchMe } from "./lib/auth";
+import { initTheme } from "./lib/theme";
 import { setErrorState, toast } from "./lib/dom";
 import { EVT_QUEUE, EVT_SYNCED } from "./lib/events";
 import { currentRoute, navigate, setRerender } from "./lib/nav";
@@ -35,6 +36,7 @@ const routes: Record<string, ViewFn> = {
   mehr: renderMore,
 };
 
+initTheme();
 document.title = `Filmlog v${__APP_VERSION__}`;
 
 const app = document.getElementById("app") as HTMLElement;
