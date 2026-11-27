@@ -62,7 +62,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
           ${dash.open_rolls
             .map((r) => {
               const n = r.frame_count + (queued.get(r.number) ?? 0);
-              return `<option value="${r.number}">${escapeHtml(r.camera.name)} · ${escapeHtml(r.film_stock.name)} #${r.number} (${n}/${r.capacity})</option>`;
+              return `<option value="${r.number}">#${r.number} · ${escapeHtml(r.film_stock.name)} · ${n}/${r.capacity}</option>`;
             })
             .join("")}
         </select>
@@ -70,7 +70,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
 
       <label>Motivbeschreibung
         <div class="motiv-row">
-          <textarea name="motif" id="motifInput" rows="1" placeholder="Was ist auf dem Bild zu sehen?"></textarea>
+          <textarea name="motif" id="motifInput" rows="1" placeholder="z. B. Teich"></textarea>
           <button type="button" class="now-btn" id="motifClear" title="Motivbeschreibung leeren" aria-label="Motivbeschreibung leeren">✕</button>
         </div>
       </label>
@@ -199,7 +199,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     fullNote.textContent = cap && n >= cap ? `Film voll (${n}/${cap}) – weitere Aufnahmen zählen als Bonus.` : "";
     const opt = rollSel.selectedOptions[0];
     if (opt && r) {
-      opt.textContent = `${r.camera.name} · ${r.film_stock.name} #${r.number} (${n}/${cap})${cap && n >= cap ? " · voll" : ""}`;
+      opt.textContent = `#${r.number} · ${r.film_stock.name} · ${n}/${cap}${cap && n >= cap ? " · voll" : ""}`;
     }
   };
 
@@ -313,7 +313,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     sel.innerHTML = optionsHtml(
       withCurrent(labels, selected).map((l) => ({ value: l, label: l })),
       selected ?? "",
-      "– keine Angabe –",
+      "keine",
     );
   }
   const shutterLabels = catalog.shutter_speeds.map((s) => s.label);

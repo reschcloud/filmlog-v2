@@ -12,7 +12,7 @@ let filterRoll = "";
 export async function renderRecent(ctx: ViewContext): Promise<void> {
   const { el } = ctx;
   el.innerHTML = `
-    <h1 class="view-title">Zuletzt eingetragene Aufnahmen</h1>
+    <h1 class="view-title">Zuletzt</h1>
     <div class="card filter-sticky">
       <label>Film
         <select id="rollFilter"><option value="">Alle</option></select>
@@ -47,8 +47,8 @@ export async function renderRecent(ctx: ViewContext): Promise<void> {
           <div class="eintrag-meta">${frameMetaHtml(f)}</div>
         </div>
         <div class="eintrag-aktionen">
-          <button type="button" class="eintrag-edit-btn" data-act="edit" data-i="${i}" title="${f.roll.status === "archiviert" ? "Ansehen" : "Bearbeiten"}" aria-label="Aufnahme ansehen oder bearbeiten">${f.roll.status === "archiviert" ? "👁️" : "✏️"}</button>
-          ${f.roll.status === "archiviert" ? "" : `<button type="button" class="eintrag-del-btn" data-act="del" data-i="${i}" title="Löschen" aria-label="Aufnahme löschen">🗑️</button>`}
+          <button type="button" class="eintrag-edit-btn" data-act="edit" data-i="${i}" title="${f.roll.status === "archiviert" ? "Ansehen" : "Bearbeiten"}" aria-label="Aufnahme ansehen oder bearbeiten">${f.roll.status === "archiviert" ? "›" : "✎"}</button>
+          ${f.roll.status === "archiviert" ? "" : `<button type="button" class="eintrag-del-btn" data-act="del" data-i="${i}" title="Löschen" aria-label="Aufnahme löschen">×</button>`}
         </div>
       </div>`;
   }

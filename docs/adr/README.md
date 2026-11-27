@@ -39,6 +39,7 @@ Umsetzung; bei Widersprüchen gilt die neuere ADR.
 | [0020](0020-frontend-daten-cache.md) | Nur Katalog/Dashboard/Vorschläge werden gecacht; Listen, Details, Suche und Stats bleiben live. | Accepted |
 | [0021](0021-navigation-ohne-aufnahme-eintrag.md) | Untere Navigation ohne generischen „Aufnahme“-Eintrag; Aufnahme startet filmbezogen. | Accepted |
 | [0022](0022-field-typografie-und-zurueck.md) | Mindestgrößen für Feldtexte und ein deutlich sichtbarer Zurück-Button. | Accepted |
+| [0023](0023-design-experiment-rams-tesla.md) | Designexperiment „Rams × Tesla“ auf eigenem Branch und separater Vorschau. | Proposed |
 
 ## Vorlage
 

@@ -209,13 +209,13 @@ export async function renderCatalog(ctx: ViewContext): Promise<void> {
           ${sub ? `<div class="cat-sub">${escapeHtml(sub)}</div>` : ""}
         </div>
         <div class="eintrag-aktionen">
-          <button type="button" class="eintrag-edit-btn" data-act="edit" data-key="${sec.key}" data-id="${item.id}" title="Bearbeiten" aria-label="Bearbeiten">✏️</button>
+          <button type="button" class="eintrag-edit-btn" data-act="edit" data-key="${sec.key}" data-id="${item.id}" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
           ${
             sec.archivable
-              ? `<button type="button" class="eintrag-edit-btn" data-act="archive" data-key="${sec.key}" data-id="${item.id}" title="${item.archived ? "Reaktivieren" : "Archivieren"}" aria-label="${item.archived ? "Reaktivieren" : "Archivieren"}">${item.archived ? "♻️" : "📦"}</button>`
+              ? `<button type="button" class="eintrag-edit-btn" data-act="archive" data-key="${sec.key}" data-id="${item.id}" title="${item.archived ? "Reaktivieren" : "Archivieren"}" aria-label="${item.archived ? "Reaktivieren" : "Archivieren"}">${item.archived ? "↺" : "□"}</button>`
               : ""
           }
-          <button type="button" class="eintrag-del-btn" data-act="delete" data-key="${sec.key}" data-id="${item.id}" title="Löschen" aria-label="Löschen">🗑️</button>
+          <button type="button" class="eintrag-del-btn" data-act="delete" data-key="${sec.key}" data-id="${item.id}" title="Löschen" aria-label="Löschen">×</button>
         </div>
       </li>`;
   }

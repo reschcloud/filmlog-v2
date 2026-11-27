@@ -19,7 +19,6 @@ export function renderSearch(ctx: ViewContext): void {
   const { el } = ctx;
   el.innerHTML = `
     <h1 class="view-title">Suche</h1>
-    <p class="view-hint">Motive, Orte, Objektive, Kameras, Filme und Notizen.</p>
     <div class="card filter-sticky">
       <label>Suchbegriff
         <input type="search" id="searchInput" placeholder="z. B. Teich" autocomplete="off" value="${escapeHtml(lastQuery)}">
