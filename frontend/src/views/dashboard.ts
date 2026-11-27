@@ -5,7 +5,7 @@ import { qs, qsa, toast, withBusy } from "../lib/dom";
 import { escapeHtml } from "../lib/escape";
 import { navigate } from "../lib/nav";
 import { queuedFramesByRoll } from "../lib/queue";
-import { expiryPillHtml, fillBarHtml, TYPE_LABELS, typeCornerHtml } from "../lib/ui";
+import { expiryPillHtml, fillBarHtml, typeCornerHtml } from "../lib/ui";
 import type { ViewContext } from "../lib/view";
 import type { Dashboard, Hint, Roll } from "../types";
 
@@ -52,50 +52,36 @@ function lastFrameHtml(d: Dashboard): string {
     </a>`;
 }
 
-function developDesc(d: Dashboard): string {
-  const t = d.to_develop;
-  if (!t.total) return "Alle Filme und ihr Status";
-  const parts = (["sw", "farbe", "dia", "anderes"] as const)
-    .filter((k) => t[k] > 0)
-    .map((k) => `${TYPE_LABELS[k]} ${t[k]}`);
-  return `Zu entwickeln: ${t.total}${parts.length > 1 ? ` (${parts.join(" · ")})` : ""}`;
+function continueHtml(d: Dashboard, queued: Map<number, number>): string {
+  const r = d.open_rolls[0];
+  if (!r) {
+    return `
+      <a class="continue-card" href="#neuer-film">
+        <div class="continue-main">
+          <div class="continue-kicker">Loslegen</div>
+          <div class="continue-title">Neuen Film anlegen</div>
+          <div class="continue-meta">Kamera und Film wählen</div>
+        </div>
+        <span class="continue-arrow">→</span>
+      </a>`;
+  }
+  const count = r.frame_count + (queued.get(r.number) ?? 0);
+  return `
+    <a class="continue-card" href="#neue-aufnahme/${r.number}">
+      <div class="continue-main">
+        <div class="continue-kicker">Weiter · ${count}${r.capacity ? `/${r.capacity}` : ""} Aufnahmen</div>
+        <div class="continue-title">#${r.number} · ${escapeHtml(r.film_stock.name)}</div>
+        <div class="continue-meta">${escapeHtml(r.camera.name)}</div>
+      </div>
+      <span class="continue-arrow">→</span>
+    </a>`;
 }
 
 export async function renderDashboard(ctx: ViewContext): Promise<void> {
   const { el } = ctx;
   el.innerHTML = `
-    <div id="dashTop"><p class="empty-state">Wird geladen …</p></div>
-    <p class="dashboard-label">Funktionen</p>
-    <div class="tile-grid">
-      <a class="tile" href="#neue-aufnahme">
-        <span class="tile-glyph">📷</span>
-        <span class="tile-title">Aufnahme</span>
-      </a>
-      <a class="tile" href="#neuer-film">
-        <span class="tile-glyph">🎞️</span>
-        <span class="tile-title">Neuer Film</span>
-      </a>
-      <a class="tile" href="#filme">
-        <span class="tile-glyph">📝</span>
-        <span class="tile-title">Filme</span>
-        <span class="tile-desc" id="filmeDesc">Protokolle, Status und Export</span>
-      </a>
-      <a class="tile" href="#stats">
-        <span class="tile-glyph">📊</span>
-        <span class="tile-title">Stats</span>
-        <span class="tile-desc">Auswertungen, Verteilungen und Karte</span>
-      </a>
-      <a class="tile" href="#optionen">
-        <span class="tile-glyph">⚙️</span>
-        <span class="tile-title">Auswahllisten</span>
-        <span class="tile-desc">Kameras, Objektive, Filme &amp; Co. verwalten</span>
-      </a>
-      <a class="tile" href="#einstellungen">
-        <span class="tile-glyph">🔧</span>
-        <span class="tile-title">Einstellungen</span>
-        <span class="tile-desc">Passwort, API-Tokens, Import, Backup</span>
-      </a>
-    </div>`;
+    <h1 class="visually-hidden">Start</h1>
+    <div id="dashTop"><p class="empty-state">Wird geladen …</p></div>`;
 
   const top = qs(el, "#dashTop");
   let result;
@@ -120,15 +106,18 @@ export async function renderDashboard(ctx: ViewContext): Promise<void> {
 
   top.innerHTML = `
     ${result.stale ? `<p class="offline-note">Offline – zuletzt geladene Daten.</p>` : ""}
-    <p class="dashboard-label">Aktiv</p>
+    ${continueHtml(d, queued)}
+    <div class="section-head">
+      <p class="dashboard-label">Aktiv</p>
+      <a class="text-link" href="#neuer-film">+ Neuer Film</a>
+    </div>
     ${
       d.open_rolls.length
         ? `<div class="dashboard-grid">${d.open_rolls.map((r) => rollCardHtml(r, queued.get(r.number) ?? 0)).join("")}</div>`
-        : `<p class="empty-state">Lege einen neuen Film an, um zu beginnen.</p>`
+        : `<p class="empty-state">Noch kein aktiver Film.</p>`
     }
     ${hints ? `<div class="hint-list">${hints}</div>` : ""}
     ${lastFrameHtml(d)}`;
-  qs(el, "#filmeDesc").textContent = developDesc(d);
 
   qsa(top, ".dashboard-card").forEach((card) => {
     const open = () => navigate(`film/${card.dataset.roll}`);

@@ -23,11 +23,18 @@
   <div class="header-actions">
     <span class="net-badge" id="netBadge" role="status" aria-label="offline" title="offline" hidden><span class="net-text">offline</span></span>
     <button type="button" class="queue-badge" id="queueBadge" hidden></button>
-    <a class="icon-btn" id="searchBtn" href="#suche" title="Suche" aria-label="Suche">🔍</a>
   </div>
 </header>
 
 <main id="app"></main>
+
+<nav class="bottom-nav" id="bottomNav" aria-label="Hauptnavigation" hidden>
+  <a href="#start" data-nav="start">Start</a>
+  <a href="#neue-aufnahme" data-nav="aufnahme">Aufnahme</a>
+  <a href="#filme" data-nav="filme">Filme</a>
+  <a href="#suche" data-nav="suche">Suche</a>
+  <a href="#mehr" data-nav="mehr">Mehr</a>
+</nav>
 
 <div id="toasts" class="toasts" aria-live="polite"></div>
 

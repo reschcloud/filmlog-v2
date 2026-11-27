@@ -10,6 +10,7 @@ import type { ViewContext, ViewFn } from "./lib/view";
 import { renderCatalog } from "./views/catalog";
 import { renderDashboard } from "./views/dashboard";
 import { renderLogin } from "./views/login";
+import { renderMore } from "./views/more";
 import { renderNewFrame } from "./views/newFrame";
 import { renderNewRoll } from "./views/newRoll";
 import { renderRecent } from "./views/recent";
@@ -30,12 +31,28 @@ const routes: Record<string, ViewFn> = {
   stats: renderStats,
   optionen: renderCatalog,
   einstellungen: renderSettings,
+  mehr: renderMore,
 };
 
 document.title = `Filmlog v${__APP_VERSION__}`;
 
 const app = document.getElementById("app") as HTMLElement;
 const backBtn = document.getElementById("backBtn") as HTMLButtonElement;
+const bottomNav = document.getElementById("bottomNav") as HTMLElement;
+
+const NAV_KEY: Record<string, string> = {
+  start: "start",
+  "neuer-film": "start",
+  filme: "filme",
+  film: "filme",
+  suche: "suche",
+  "neue-aufnahme": "aufnahme",
+  mehr: "mehr",
+  zuletzt: "mehr",
+  stats: "mehr",
+  optionen: "mehr",
+  einstellungen: "mehr",
+};
 const queueBadge = document.getElementById("queueBadge") as HTMLButtonElement;
 const netBadge = document.getElementById("netBadge") as HTMLElement;
 
@@ -47,8 +64,20 @@ function renderRoute(): void {
   if (!loggedIn) return;
   const my = ++renderToken;
   const { name, params } = currentRoute();
-  const fn = routes[name] ?? routes.start;
-  backBtn.hidden = name === "start";
+  const routeName = routes[name] ? name : "start";
+  const fn = routes[routeName] ?? routes.start;
+  const capture = routeName === "neue-aufnahme";
+  backBtn.hidden = routeName === "start";
+  bottomNav.hidden = capture;
+  document.body.classList.toggle("capture-mode", capture);
+  document.body.classList.toggle("nav-visible", !capture);
+  const navKey = NAV_KEY[routeName] ?? "mehr";
+  bottomNav.querySelectorAll<HTMLAnchorElement>("a").forEach((a) => {
+    const active = a.dataset.nav === navKey;
+    a.classList.toggle("aktiv", active);
+    if (active) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
   const el = document.createElement("section");
   el.className = "view";
   app.replaceChildren(el);
@@ -66,6 +95,8 @@ function showLogin(): void {
   loginShown = true;
   loggedIn = false;
   backBtn.hidden = true;
+  bottomNav.hidden = true;
+  document.body.classList.remove("nav-visible", "capture-mode");
   renderToken++;
   document.body.classList.add("logged-out");
   const el = document.createElement("section");
