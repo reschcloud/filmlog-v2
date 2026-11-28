@@ -22,6 +22,7 @@
   --amber-dim: #9a4f22;
   --amber-bright: #f0a06e;
   --muted: #c9bfae;
+  --ok: #2f7d4a;
   --font-mono: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --x-small: 14px;
@@ -705,7 +706,6 @@
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
 }
 .theme .capture-when { font-size: var(--medium); color: var(--ink); }
-.theme .when-edit { font-size: var(--medium); color: var(--amber-dim); text-transform: none; letter-spacing: 0; }
 .theme .frame-details { border-top-color: var(--paper-dim); }
 .theme .frame-details summary { font-size: var(--medium); color: var(--ink-soft); }
 .theme .frame-details summary::before { content: "›"; margin-right: 6px; color: var(--amber-dim); display: inline-block; }
@@ -719,7 +719,10 @@
 }
 .theme .pin-icon { display: inline-flex; align-items: center; justify-content: center; vertical-align: -3px; line-height: 1; }
 .theme .pin-icon svg { display: block; }
+.theme .gps-ok { display: inline-flex; align-items: center; gap: 6px; }
+.theme .gps-ok .pin-icon { color: var(--ok); vertical-align: 0; }
 .theme .chip small { color: var(--ink-soft); }
+.theme .motif-recent .chip { min-height: 44px; padding: 6px 10px; font-size: var(--small); }
 .theme .chip:hover { background: var(--amber); color: var(--ink); }
 .theme .add-btn {
   width: auto;
@@ -735,7 +738,6 @@
   box-shadow: none;
 }
 .theme .save-bar-inner { max-width: 800px; padding: 12px 20px calc(12px + env(safe-area-inset-bottom)); }
-.theme .save-count { font-family: var(--font-display); font-size: var(--large); color: var(--ink); }
 .theme .save-full { color: var(--red-dim); }
 .theme .frame-form { padding-bottom: 24px; margin-bottom: 160px; }
 .theme .anzahl-stepper input[type="number"] { min-height: 52px; font-size: var(--medium); }

@@ -120,7 +120,7 @@ Bei Belichtungszeit/Blende genügt `{"label":"125"}`.
 
 ## Vorschläge
 
-| GET | `/api/v2/suggestions/frame?roll={number}` | `{"lens_id","shutter","aperture","motif","lens_ids":[…]}` – letzte Werte dieses Films; `lens_ids` = zur Kamera passende Objektive (zuletzt genutzt zuerst; leer = alle) |
+| GET | `/api/v2/suggestions/frame?roll={number}` | `{"lens_id","shutter","aperture","motif","motifs":[…],"lens_ids":[…]}` – letzte Werte dieses Films; `motifs` = bis zu 3 zuletzt genutzte Motive (neueste zuerst), `lens_ids` = zur Kamera passende Objektive (zuletzt genutzt zuerst; leer = alle) |
 | GET | `/api/v2/suggestions/roll?camera_id=&film_stock_id=` | `{"capacity":36,"expiry_year":2027,"type":"sw","iso":400}` |
 | GET | `/api/v2/suggestions/motifs?q=bau` | `["Baum am Teich", …]` (max 10, häufigste zuerst) |
 | GET | `/api/v2/suggestions/places?lat=&lon=` | `[{"location_text":"Stadtpark","distance_m":120}]` (≤ 1 km, max 5) |

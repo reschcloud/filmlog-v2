@@ -228,11 +228,13 @@ def test_suggestions(client, basics):
 
     f = client.get("/api/v2/suggestions/frame?roll=1").json()
     assert f["lens_ids"] == [basics["lens"]["id"]] and f["lens_id"] == basics["lens"]["id"]
+    assert f["motifs"] == []
     _frames(client, 1, shutter="1/250", aperture="11", motif="Teich im Park", lat=52.5, lon=13.4,
             location_text="Stadtpark")
     _frames(client, 1, motif="Teich am Abend", lat=52.5, lon=13.4, location_text="52.50000, 13.40000")
     f = client.get("/api/v2/suggestions/frame?roll=1").json()
     assert f["motif"] == "Teich am Abend"
+    assert f["motifs"] == ["Teich am Abend", "Teich im Park"]
     assert client.get("/api/v2/suggestions/motifs?q=teich").json() == ["Teich am Abend", "Teich im Park"]
     places = client.get("/api/v2/suggestions/places?lat=52.501&lon=13.401").json()
     assert places[0]["location_text"] == "Stadtpark" and places[0]["distance_m"] < 200

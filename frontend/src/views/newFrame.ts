@@ -13,6 +13,17 @@ import type { Catalog, CreateFramePayload, Dashboard, Frame, FrameSuggestion, Pl
 const ALL_LENSES = "__all__";
 const DRAFT_KEY = "filmlog:draft:newFrame";
 
+/** Blenden einheitlich mit kleinem f: "F/8", "f8", "8" -> "f/8". */
+function normalizeAperture(value: string | null | undefined): string {
+  if (!value) return "";
+  const t = value.trim();
+  const m = t.match(/^f\s*\/?\s*(.+)$/i);
+  if (m) return `f/${m[1]}`;
+  if (/^1:/.test(t)) return `f/${t.slice(2)}`;
+  if (/^\d/.test(t)) return `f/${t}`;
+  return t;
+}
+
 interface FrameDraft {
   roll: string;
   motif: string;
@@ -62,7 +73,8 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
           ${dash.open_rolls
             .map((r) => {
               const n = r.frame_count + (queued.get(r.number) ?? 0);
-              return `<option value="${r.number}">#${r.number} · ${escapeHtml(r.film_stock.name)} · ${n}/${r.capacity}</option>`;
+              const full = r.capacity && n >= r.capacity;
+              return `<option value="${r.number}">#${r.number} · ${escapeHtml(r.film_stock.name)}${full ? " · voll" : ""}</option>`;
             })
             .join("")}
         </select>
@@ -82,7 +94,6 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
 
       <p class="capture-when">
         <span id="whenText"></span>
-        <button type="button" class="when-edit" id="whenEdit">ändern</button>
       </p>
 
       <details class="frame-details" id="frameDetails">
@@ -132,7 +143,6 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
       <div class="save-bar">
         <div class="save-bar-inner">
           <div class="save-bar-main">
-            <span class="save-count" id="rollCount"></span>
             <div class="anzahl-stepper">
               <button type="button" class="anzahl-btn" id="countMinus" aria-label="Weniger">−</button>
               <input type="number" name="count" id="countInput" min="1" max="50" step="1" value="1" aria-label="Anzahl Aufnahmen">
@@ -160,10 +170,8 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   const dateInput = qs<HTMLInputElement>(el, "#dateInput");
   const timeInput = qs<HTMLInputElement>(el, "#timeInput");
   const countInput = qs<HTMLInputElement>(el, "#countInput");
-  const rollCount = qs(el, "#rollCount");
   const fullNote = qs(el, "#fullNote");
   const whenText = qs(el, "#whenText");
-  const whenEdit = qs<HTMLButtonElement>(el, "#whenEdit");
   const frameDetails = qs<HTMLDetailsElement>(el, "#frameDetails");
   const detailsSummary = qs(el, "#detailsSummary");
   const submits = qsa<HTMLButtonElement>(form, "button[type=submit]");
@@ -186,10 +194,6 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     if (place) parts.push(place);
     detailsSummary.innerHTML = parts.length ? `Details · ${parts.join(" · ")}` : "Details";
   };
-  whenEdit.onclick = () => {
-    frameDetails.open = true;
-    dateInput.focus();
-  };
 
   const rollCounts = new Map<number, number>();
   for (const r of dash.open_rolls) rollCounts.set(r.number, r.frame_count + (queued.get(r.number) ?? 0));
@@ -199,12 +203,12 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     const r = selectedRoll();
     const n = currentCount();
     const cap = r?.capacity ?? 0;
-    rollCount.textContent = cap ? `${n}/${cap}` : String(n);
-    fullNote.hidden = !cap || n < cap;
-    fullNote.textContent = cap && n >= cap ? `Film voll (${n}/${cap}) – weitere Aufnahmen zählen als Bonus.` : "";
+    const full = !!cap && n >= cap;
+    fullNote.hidden = !full;
+    fullNote.textContent = full ? "Film voll – weitere Aufnahmen zählen als Bonus." : "";
     const opt = rollSel.selectedOptions[0];
     if (opt && r) {
-      opt.textContent = `#${r.number} · ${r.film_stock.name} · ${n}/${cap}${cap && n >= cap ? " · voll" : ""}`;
+      opt.textContent = `#${r.number} · ${r.film_stock.name}${full ? " · voll" : ""}`;
     }
   };
 
@@ -330,19 +334,22 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     );
   }
   const shutterLabels = catalog.shutter_speeds.map((s) => s.label);
-  const apertureLabels = catalog.apertures.map((a) => a.label);
+  const apertureLabels = catalog.apertures.map((a) => normalizeAperture(a.label));
 
-  let lastMotif: string | null = null;
+  let lastMotifs: string[] = [];
 
   function updateMotifRecent(): void {
-    const recent = lastMotif?.trim();
-    if (!recent || motif.value.trim()) {
+    const typed = motif.value.trim();
+    const motifs = lastMotifs.filter((m) => m.trim() && m !== typed);
+    if (typed || !motifs.length) {
       motifRecent.hidden = true;
       motifRecent.innerHTML = "";
       return;
     }
     motifRecent.hidden = false;
-    motifRecent.innerHTML = `<button type="button" class="chip" data-motif="${escapeHtml(recent)}">wie zuletzt: ${escapeHtml(recent)}</button>`;
+    motifRecent.innerHTML = motifs
+      .map((m) => `<button type="button" class="chip" data-motif="${escapeHtml(m)}">${escapeHtml(m)}</button>`)
+      .join("");
   }
 
   async function applySuggestion(roll: number): Promise<void> {
@@ -361,8 +368,9 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
     if (lensId === null && restricted.length) lensId = restricted[0] ?? null;
     if (!lensTouched) fillLenses(lensId);
     if (!shutterTouched) fillSelect(shutterSel, shutterLabels, s?.shutter ?? null);
-    if (!apertureTouched) fillSelect(apertureSel, apertureLabels, s?.aperture ?? null);
-    lastMotif = s?.motif ?? null;
+    if (!apertureTouched) fillSelect(apertureSel, apertureLabels, normalizeAperture(s?.aperture) || null);
+    const recent = (s?.motifs ?? []).filter((m) => m && m.trim());
+    lastMotifs = recent.length ? recent.slice(0, 3) : s?.motif ? [s.motif] : [];
     updateMotifRecent();
     updateDetailsSummary();
   }
@@ -373,7 +381,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
   if (draft) {
     if (draft.lens) lensSel.value = draft.lens;
     if (draft.shutter) shutterSel.value = draft.shutter;
-    if (draft.aperture) apertureSel.value = draft.aperture;
+    if (draft.aperture) fillSelect(apertureSel, apertureLabels, normalizeAperture(draft.aperture));
     motif.value = draft.motif;
     flashChk.checked = draft.flash;
     placeInput.value = draft.place;
@@ -486,7 +494,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
         if (!ctx.alive()) return;
         lat = pos.coords.latitude;
         lon = pos.coords.longitude;
-        gpsStatus.innerHTML = `${pinIconHtml()} Standort gefunden`;
+        gpsStatus.innerHTML = `<span class="gps-ok">${pinIconHtml()}<span>Standort gefunden</span></span>`;
         updateDetailsSummary();
         void loadPlaces();
       },
@@ -540,6 +548,7 @@ export async function renderNewFrame(ctx: ViewContext): Promise<void> {
       rollCounts.set(roll, newCount);
       if (Number(rollSel.value) === roll) {
         if (!dtTouched) setNow();
+        if (m) lastMotifs = [m, ...lastMotifs.filter((x) => x !== m)].slice(0, 3);
         motif.value = "";
         motifSuggest.hidden = true;
         updateMotifRecent();

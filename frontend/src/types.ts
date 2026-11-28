@@ -136,6 +136,7 @@ export interface FrameSuggestion {
   shutter: string | null;
   aperture: string | null;
   motif: string | null;
+  motifs: string[];
   lens_ids: number[];
 }
 

@@ -341,10 +341,24 @@ def suggest_frame(roll: int, db: Session = Depends(get_db)):
         lens_ids = [i for i in lens_ids if i in explicit] + [i for i in explicit if i not in lens_ids]
 
     if last:
+        motifs = []
+        seen = set()
+        for motif in db.scalars(
+            select(Frame.motif)
+            .where(Frame.roll_id == r.id, Frame.motif.is_not(None), Frame.motif != "")
+            .order_by(Frame.position.desc())
+        ):
+            motif = (motif or "").strip()
+            if not motif or motif in seen:
+                continue
+            seen.add(motif)
+            motifs.append(motif)
+            if len(motifs) == 3:
+                break
         return {"lens_id": last.lens_id, "shutter": last.shutter, "aperture": last.aperture, "motif": last.motif,
-                "lens_ids": lens_ids}
+                "motifs": motifs, "lens_ids": lens_ids}
     return {"lens_id": lens_ids[0] if lens_ids else None, "shutter": None, "aperture": None, "motif": None,
-            "lens_ids": lens_ids}
+            "motifs": [], "lens_ids": lens_ids}
 
 
 @router.get("/suggestions/roll")

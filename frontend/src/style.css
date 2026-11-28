@@ -580,20 +580,6 @@ body {
   font-size: 17px;
   color: var(--ink);
 }
-.when-edit {
-  flex-shrink: 0;
-  min-height: 44px;
-  padding: 0 4px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--medium);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--red-dim);
-}
 .frame-details { border-top: 1px solid var(--paper-dim); padding-top: 4px; }
 .frame-details summary {
   display: flex;
@@ -638,10 +624,6 @@ body {
 }
 .save-bar-main { display: flex; align-items: center; gap: 10px; }
 .save-bar-main .anzahl-stepper { flex: 1; min-width: 0; }
-.save-count {
-  font-family: var(--font-display); font-weight: 700;
-  font-size: var(--large); color: var(--ink); white-space: nowrap;
-}
 .save-full { margin: 0; color: var(--red-dim); }
 .save-bar .btn-primary { width: 100%; }
 
