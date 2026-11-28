@@ -29,6 +29,7 @@ DRY_RUN=0
 COMPOSE=()
 COMPOSE_MODE="docker"
 BACKUP_PATH=""
+MAX_BACKUPS=7
 
 # ---------- Ausgabe ----------
 
@@ -274,6 +275,35 @@ show_version() {
 
 # ---------- Sicherheitskopie ----------
 
+prune_backups() {
+  shopt -s nullglob
+  local entries=("$DATA_DIR"/backup-*)
+  shopt -u nullglob
+
+  local keep=() base p
+  for p in "${entries[@]}"; do
+    base="$(basename "$p")"
+    # Nur die eigenen Zeitstempel-Kopien verwalten, keine manuell benannten Dateien.
+    if [[ "$base" =~ ^backup-[0-9]{8}-[0-9]{6}(\.sqlite)?$ ]]; then
+      keep+=("$p")
+    fi
+  done
+
+  local excess
+  excess=$((${#keep[@]} - MAX_BACKUPS))
+  [ "$excess" -gt 0 ] || return 0
+
+  local i
+  for ((i = 0; i < excess; i++)); do
+    if [ "$DRY_RUN" = 1 ]; then
+      msg "  + alte Sicherheitskopie löschen: ${keep[$i]#$ROOT/}"
+    else
+      rm -rf -- "${keep[$i]}"
+      msg "Alte Sicherheitskopie entfernt: ${keep[$i]#$ROOT/}"
+    fi
+  done
+}
+
 backup_data() {
   step "Sicherheitskopie"
   local ts dir
@@ -281,6 +311,7 @@ backup_data() {
 
   if [ "$DRY_RUN" = 1 ]; then
     msg "  + Sicherheitskopie nach data/backup-$ts…"
+    msg "  + danach bleiben die letzten $MAX_BACKUPS Kopien (ältere werden gelöscht)"
     return 0
   fi
 
@@ -301,6 +332,7 @@ backup_data() {
     return 0
   fi
   msg "Sicherheitskopie: $BACKUP_PATH"
+  prune_backups
 }
 
 # ---------- Update des Checkouts ----------

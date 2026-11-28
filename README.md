@@ -57,8 +57,9 @@ Optionen: `--build` (lokal bauen), `--no-git` (beim Update kein `git pull`), `--
 nichts ausführen). Das Skript nutzt `docker compose`, wenn vorhanden, sonst reines `docker`.
 
 Vor einem Update wird die Datenbank gesichert: im laufenden Container über `filmlog backup`, sonst als
-Kopie der SQLite-Dateien unter `data/backup-…`. Schlägt der Healthcheck nach dem Neustart fehl, bleibt die
-Sicherheitskopie erhalten.
+Kopie der SQLite-Dateien unter `data/backup-…`. Von diesen automatischen Kopien bleiben die letzten **7**
+erhalten; ältere entfernt das Skript. Manuell benannte Backups (`backup-2026-11-28.sqlite`) werden nicht
+angetastet. Schlägt der Healthcheck nach dem Neustart fehl, bleibt die Sicherheitskopie erhalten.
 
 ## Aktualisieren
 
