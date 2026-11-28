@@ -155,7 +155,9 @@ ensure_env() {
     chmod 600 "$ENV_FILE" 2>/dev/null || true
     if grep -q '^FILMLOG_ADMIN_PASSWORD=bitte-aendern$' "$ENV_FILE"; then
       warn "FILMLOG_ADMIN_PASSWORD steht in .env noch auf dem Beispielwert."
-      if [ "$COMMAND" = "install" ] && [ -t 0 ] && [ "$DRY_RUN" != 1 ]; then
+      # Nur bei einer frischen Installation fragen: Bei vorhandener DB ist der Benutzer
+      # bereits angelegt, die .env wird dann nicht mehr ausgewertet.
+      if [ "$COMMAND" = "install" ] && [ -t 0 ] && [ "$DRY_RUN" != 1 ] && [ ! -f "$DATA_DIR/filmlog.db" ]; then
         prompt_admin
       fi
     fi
