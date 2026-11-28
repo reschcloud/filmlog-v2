@@ -78,6 +78,8 @@ Python-Abhängigkeiten ggf. ebenso in einem `python:3.12-slim`-Container (venv a
 - `pull_policy: missing` lässt `docker compose up` ohne Netz starten, hat aber eine Falle: `docker compose pull`
   überspringt das Laden, wenn der Tag `:2` lokal schon existiert. Updates daher mit
   `docker compose pull --policy always` (oder `up -d --pull always`). `--build` für lokale Änderungen.
+- `setup.sh install|update` bündelt Erstinstallation und Update (Env, Image, Backup, Healthcheck); `status`
+  zeigt Container, Health und Version. Compose ist optional, das Skript fällt auf reines `docker` zurück.
 - Reverse-Proxy-Konfiguration (Apache/Caddy) gehört bewusst **nicht** ins Repo.
 - v1-Daten: `filmlog import-v1 <db.yaml> [optionen.yaml] [--dry-run]` oder Upload in der UI. Der Import ist
   idempotent (überspringt vorhandene Filmnummern) und rollt bei `--dry-run` zurück.

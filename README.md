@@ -10,19 +10,22 @@ Offline-Warteschlange, YAML-Import aus v1, JSON-Export und SQLite-Backup.
 
 ## Schnellstart
 
-Voraussetzungen: Docker mit Compose-Plugin und `git`. Auf einem Raspberry Pi das 64-Bit-System verwenden
+Voraussetzungen: Docker mit `git`; das Compose-Plugin ist empfohlen, aber optional (das Setup-Skript
+fällt auf reines `docker` zurück). Auf einem Raspberry Pi das 64-Bit-System verwenden
 (das Image gibt es für amd64 und arm64).
 
 ```bash
 git clone https://github.com/reschcloud/filmlog-v2.git
 cd filmlog-v2
-cp .env.example .env              # Benutzername/Passwort eintragen
-docker compose pull               # fertiges Image (amd64/arm64) von ghcr.io
-docker compose up -d
+./setup.sh install
 ```
 
-Für eigene Änderungen am Code den Befehl `docker compose up -d --build` verwenden
-(baut lokal, auch auf einem Pi; das kann einige Minuten dauern).
+Das Skript legt `.env` an (und fragt nach dem Admin-Zugang), zieht das fertige Image und startet den
+Container. Manuell geht es genauso mit `cp .env.example .env`, `docker compose pull` und
+`docker compose up -d`.
+
+Für eigene Änderungen am Code `./setup.sh install --build` verwenden (oder
+`docker compose up -d --build`; baut lokal, auch auf einem Pi; das kann einige Minuten dauern).
 
 Meldet der Server `docker: unknown command: docker compose`, fehlt das Compose-Plugin – siehe
 [Ohne Compose-Plugin](#ohne-compose-plugin-nur-docker).
@@ -40,10 +43,29 @@ Nur im LAN ohne HTTPS: in `.env` `FILMLOG_SECURE_COOKIES=false` setzen, sonst fu
 
 Die Daten liegen in `./data/filmlog.db` (SQLite, WAL-Modus). Datenbank-Migrationen laufen beim Start automatisch.
 
+## Setup-Skript
+
+`setup.sh` bündelt Installation und Update:
+
+| Befehl | Zweck |
+|---|---|
+| `./setup.sh install` | Erstinstallation: `.env` anlegen, Image ziehen, Container starten |
+| `./setup.sh update` | Sicherheitskopie, `git pull`, neues Image, Neustart, Healthcheck |
+| `./setup.sh status` | Container, Health und laufende Version |
+
+Optionen: `--build` (lokal bauen), `--no-git` (beim Update kein `git pull`), `--dry-run` (nur anzeigen,
+nichts ausführen). Das Skript nutzt `docker compose`, wenn vorhanden, sonst reines `docker`.
+
+Vor einem Update wird die Datenbank gesichert: im laufenden Container über `filmlog backup`, sonst als
+Kopie der SQLite-Dateien unter `data/backup-…`. Schlägt der Healthcheck nach dem Neustart fehl, bleibt die
+Sicherheitskopie erhalten.
+
 ## Aktualisieren
 
-Neue Version holen (Repo und Image). Die Daten in `./data` bleiben unverändert, Schemaänderungen werden beim
-Start automatisch migriert:
+Kurzfassung: `./setup.sh update` (Sicherheitskopie, `git pull`, `pull --policy always`, Neustart).
+
+Manuell neue Version holen (Repo und Image). Die Daten in `./data` bleiben unverändert, Schemaänderungen
+werden beim Start automatisch migriert:
 
 ```bash
 cd filmlog-v2
@@ -69,8 +91,10 @@ docker compose exec filmlog python -c "import filmlog; print(filmlog.__version__
 Wer lokal baut (eigene Änderungen), nimmt stattdessen:
 
 ```bash
-git pull && docker compose up -d --build
+./setup.sh update --build
 ```
+
+oder manuell `git pull && docker compose up -d --build`.
 
 **Zurück auf eine ältere Version** (z. B. wenn ein Update Probleme macht):
 
@@ -89,7 +113,7 @@ Wer aus einem ausgecheckten Tag baut, sollte danach wieder auf `main` wechseln: 
 
 ## Ohne Compose-Plugin (nur `docker`)
 
-Fehlt `docker compose` (Meldung `docker: unknown command: docker compose`), gibt es zwei Wege.
+Das Setup-Skript erkennt das automatisch und nutzt reines `docker`. Manuell gibt es zwei Wege.
 
 **A) Plugin nachinstallieren** (empfohlen, dann funktionieren alle Befehle oben):
 
